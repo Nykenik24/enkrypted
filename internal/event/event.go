@@ -3,6 +3,7 @@ package event
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 )
 
 type EventKind int
@@ -10,16 +11,26 @@ type EventKind int
 const (
 	PingEvent EventKind = iota
 	MessageEvent
+	IdentifyEvent
 )
 
 var eventKindToString = map[EventKind]string{
-	PingEvent:    "enkr:ping",
-	MessageEvent: "enkr:msg",
+	MessageEvent:  "enkr:msg",
+	IdentifyEvent: "enkr:identify",
 }
 
 var stringToEventKind = map[string]EventKind{
-	"enkr:ping": PingEvent,
-	"enkr:msg":  MessageEvent,
+	"enkr:msg":      MessageEvent,
+	"enkr:identify": IdentifyEvent,
+}
+
+var kindStringRegex = regexp.MustCompile(`^[A-Za-z0-9_-]+(?::[A-Za-z0-9_-]+)*$`)
+
+func validateKindString(s string) error {
+	if !kindStringRegex.Match([]byte(s)) {
+		return fmt.Errorf("event kind string doesn't follow the correct format")
+	}
+	return nil
 }
 
 func (k EventKind) MarshalJSON() ([]byte, error) {
@@ -29,6 +40,10 @@ func (k EventKind) MarshalJSON() ([]byte, error) {
 func (k *EventKind) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+
+	if err := validateKindString(s); err != nil {
 		return err
 	}
 
