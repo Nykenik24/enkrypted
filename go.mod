@@ -8,6 +8,12 @@ require (
 )
 
 require (
+	github.com/gorilla/websocket v1.5.3 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
+	go.uber.org/zap v1.27.1 // indirect
+)
+
+require (
 	charm.land/lipgloss/v2 v2.0.2 // direct
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
