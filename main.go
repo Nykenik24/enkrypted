@@ -1,7 +1,7 @@
 package main
 
-import "fmt"
+import "github.com/Nykenik24/enkrypted/client"
 
 func main() {
-	fmt.Println("Hello, World!")
+	client.RunClient()
 }
