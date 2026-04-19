@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
 )
@@ -61,7 +62,6 @@ func (s *Server) Run() {
 	}
 }
 
-// helper (optional)
 func (s *Server) BroadcastEvent(kind event.EventKind, payload any) error {
 	ev := struct {
 		Kind    event.EventKind `json:"kind"`
@@ -71,10 +71,12 @@ func (s *Server) BroadcastEvent(kind event.EventKind, payload any) error {
 		Payload: payload,
 	}
 
-	data, err := json.Marshal(ev)
+	data, err := json.MarshalIndent(ev, "", "\t")
 	if err != nil {
 		return err
 	}
+
+	log.Printf("broadcasted: %s", data)
 
 	s.Broadcast(data)
 	return nil

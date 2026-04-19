@@ -19,7 +19,7 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	http.ServeFile(w, r, "web/home.html")
+	http.ServeFile(w, r, "web/index.html")
 }
 
 func Start() {
@@ -28,13 +28,21 @@ func Start() {
 	srv := server.NewServer()
 	go srv.Run()
 
+	http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir("web"))))
 	http.HandleFunc("/", serveHome)
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("WS: %s", r.RemoteAddr)
+
 		c := ws.ServeWebsockets(srv, w, r)
-		c.AddHandler(event.PingEvent, handlers.PingEV)
+
+		if c == nil {
+			log.Println("ws upgrade failed")
+			return
+		}
+
 		c.AddHandler(event.MessageEvent, handlers.MessageEV)
+		c.AddHandler(event.IdentifyEvent, handlers.IdentifyEV)
 	})
 
 	httpServer := &http.Server{

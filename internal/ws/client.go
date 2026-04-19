@@ -10,6 +10,7 @@ import (
 
 	"github.com/Nykenik24/enkrypted/internal/event"
 	"github.com/Nykenik24/enkrypted/internal/server"
+	"github.com/Nykenik24/enkrypted/internal/user"
 )
 
 const (
@@ -33,6 +34,7 @@ type Client struct {
 	send   chan []byte
 
 	handlers map[event.EventKind]EventHandler
+	user     *user.User
 }
 
 func NewClient(s *server.Server, conn *websocket.Conn) *Client {
@@ -41,6 +43,7 @@ func NewClient(s *server.Server, conn *websocket.Conn) *Client {
 		conn:     conn,
 		send:     make(chan []byte, 256),
 		handlers: make(map[event.EventKind]EventHandler),
+		user:     user.NewUser(user.GenericUsername()),
 	}
 }
 
@@ -65,6 +68,14 @@ func (c *Client) AddHandler(kind event.EventKind, handler EventHandler) {
 
 func (c *Client) RemoveHandler(kind event.EventKind) {
 	delete(c.handlers, kind)
+}
+
+func (c *Client) SetUsername(username string) {
+	c.user.Username = username
+}
+
+func (c *Client) GetUser() *user.User {
+	return c.user
 }
 
 func (c *Client) SendEvent(kind event.EventKind, payload any) error {
@@ -113,10 +124,14 @@ func readPump(c *Client) {
 
 		handler, ok := c.handlers[ev.Kind]
 		if !ok {
+			log.Printf("handler for kind '%d' doesn't exist", ev.Kind)
 			continue
 		}
 
-		_ = handler(c, ev.Payload)
+		err = handler(c, ev.Payload)
+		if err != nil {
+			log.Printf("error when handling event:\n--> \x1b[31m%v\x1b[0m", err)
+		}
 	}
 }
 

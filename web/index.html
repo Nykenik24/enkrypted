@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Enkrypted WS Console</title>
+        <link rel="stylesheet" href="/web/styles.css" />
+    </head>
+
+    <body>
+        <div id="connect">
+            <div class="card">
+                <h1>WS Console</h1>
+
+                <label>Endpoint</label>
+                <input id="url" value="ws://localhost:8080/ws" />
+
+                <label>Username</label>
+                <input id="username" placeholder="username" />
+
+                <button id="connectBtn">Connect</button>
+            </div>
+        </div>
+
+        <div id="app" class="hidden">
+            <header class="topbar">
+                <div id="status">disconnected</div>
+                <div id="user"></div>
+            </header>
+
+            <div class="layout">
+                <section class="panel">
+                    <div class="title">Events</div>
+                    <div id="events"></div>
+                </section>
+
+                <section class="panel">
+                    <div class="title">Inspector</div>
+                    <pre id="inspector">{}</pre>
+                </section>
+            </div>
+
+            <footer class="bar">
+                <select id="kind"></select>
+                <input id="msg" placeholder="message..." />
+                <button id="send">send</button>
+            </footer>
+        </div>
+
+        <script type="module" src="/web/ui/app.js"></script>
+    </body>
+</html>
