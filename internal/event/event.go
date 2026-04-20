@@ -57,6 +57,31 @@ func (k *EventKind) UnmarshalJSON(b []byte) error {
 }
 
 type Event struct {
-	Kind    EventKind       `json:"kind"`
-	Payload json.RawMessage `json:"payload"`
+	Kind    EventKind `json:"kind"`
+	Payload any       `json:"payload"`
+}
+
+func NewEvent(kind EventKind, payload any) *Event {
+	return &Event{
+		Kind:    kind,
+		Payload: payload,
+	}
+}
+
+func (ev *Event) Marshal() ([]byte, error) {
+	rawJSON, err := json.MarshalIndent(ev, "", "\t")
+	if err != nil {
+		return nil, err
+	}
+
+	return rawJSON, nil
+}
+
+func Unmarshal(rawJSON []byte) (*Event, error) {
+	var ev Event
+	if err := json.Unmarshal(rawJSON, &ev); err != nil {
+		return nil, err
+	}
+
+	return &ev, nil
 }

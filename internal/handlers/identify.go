@@ -12,10 +12,15 @@ type IdentifyPayload struct {
 	Username string `json:"username"`
 }
 
-func IdentifyEV(c *ws.Client, payload json.RawMessage) error {
+func IdentifyEV(c *ws.Client, payload any) error {
 	var p IdentifyPayload
 
-	if err := json.Unmarshal(payload, &p); err != nil {
+	rawJSON, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(rawJSON, &p); err != nil {
 		return err
 	}
 
