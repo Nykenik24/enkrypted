@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/middleware"
 )
 
 type Client interface {
@@ -18,6 +19,8 @@ type Server struct {
 	register   chan Client
 	unregister chan Client
 	broadcast  chan []byte
+
+	midware map[string]middleware.Middleware
 }
 
 func NewServer() *Server {
@@ -26,6 +29,7 @@ func NewServer() *Server {
 		register:   make(chan Client),
 		unregister: make(chan Client),
 		broadcast:  make(chan []byte),
+		midware:    make(map[string]middleware.Middleware),
 	}
 }
 
@@ -63,12 +67,11 @@ func (s *Server) Run() {
 }
 
 func (s *Server) BroadcastEvent(kind event.EventKind, payload any) error {
-	ev := struct {
-		Kind    event.EventKind `json:"kind"`
-		Payload any             `json:"payload"`
-	}{
-		Kind:    kind,
-		Payload: payload,
+	ev := event.NewEvent(kind, payload)
+
+	err := middleware.MultiInject(s.midware, ev)
+	if err != nil {
+		return err
 	}
 
 	data, err := json.MarshalIndent(ev, "", "\t")

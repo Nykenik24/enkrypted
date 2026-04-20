@@ -69,7 +69,7 @@ func NewEvent(kind EventKind, payload any) *Event {
 }
 
 func (ev *Event) Marshal() ([]byte, error) {
-	rawJSON, err := json.Marshal(ev)
+	rawJSON, err := json.MarshalIndent(ev, "", "\t")
 	if err != nil {
 		return nil, err
 	}

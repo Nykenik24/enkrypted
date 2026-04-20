@@ -2,6 +2,7 @@ package ws
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gorilla/websocket"
 
@@ -31,6 +32,7 @@ func NewClient(s *server.Server, conn *websocket.Conn) *Client {
 		send:     make(chan []byte, 256),
 		handlers: make(map[event.EventKind]EventHandler),
 		user:     user.NewUser(user.GenericUsername()),
+		midware:  make(map[string]middleware.Middleware),
 	}
 }
 
@@ -67,13 +69,10 @@ func (c *Client) GetUser() *user.User {
 
 func (c *Client) SendEvent(kind event.EventKind, payload any) error {
 	ev := event.NewEvent(kind, payload)
-	var err error = nil
 
-	for _, midware := range c.midware {
-		ev, err = midware.Inject(ev)
-		if err != nil {
-			return fmt.Errorf("when running middleware: %v", err)
-		}
+	err := middleware.MultiInject(c.midware, ev)
+	if err != nil {
+		return err
 	}
 
 	rawJSON, err := ev.Marshal()
@@ -81,17 +80,28 @@ func (c *Client) SendEvent(kind event.EventKind, payload any) error {
 		return err
 	}
 
+	log.Printf("sending event: %s", rawJSON)
 	c.Send(rawJSON)
 	return nil
 }
 
 func (c *Client) Handle(ev *event.Event) error {
+	err := middleware.MultiInject(c.midware, ev)
+	if err != nil {
+		return err
+	}
+
+	rawJSON, err := ev.Marshal()
+	if err == nil {
+		log.Printf("handling event: %s", rawJSON)
+	}
+
 	handler, ok := c.handlers[ev.Kind]
 	if !ok {
 		return fmt.Errorf("handler for kind '%d' doesn't exist", ev.Kind)
 	}
 
-	err := handler(c, ev.Payload)
+	err = handler(c, ev.Payload)
 	if err != nil {
 		return fmt.Errorf("error when handling event:\n--> \x1b[31m%v\x1b[0m", err)
 	}
