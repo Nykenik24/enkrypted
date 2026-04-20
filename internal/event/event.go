@@ -61,6 +61,15 @@ type Event struct {
 	Payload json.RawMessage `json:"payload"`
 }
 
+func (ev *Event) Marshal() ([]byte, error) {
+	rawJSON, err := json.Marshal(ev)
+	if err != nil {
+		return nil, err
+	}
+
+	return rawJSON, nil
+}
+
 func Unmarshal(rawJSON []byte) (*Event, error) {
 	var ev Event
 	if err := json.Unmarshal(rawJSON, &ev); err != nil {

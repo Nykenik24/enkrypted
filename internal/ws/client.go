@@ -3,29 +3,14 @@ package ws
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"net/http"
-	"time"
 
 	"github.com/gorilla/websocket"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/middleware"
 	"github.com/Nykenik24/enkrypted/internal/server"
 	"github.com/Nykenik24/enkrypted/internal/user"
 )
-
-const (
-	writeWait      = 10 * time.Second
-	pongWait       = 60 * time.Second
-	pingPeriod     = (pongWait * 9) / 10
-	maxMessageSize = 512
-)
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin:     func(r *http.Request) bool { return true },
-}
 
 type EventHandler func(*Client, json.RawMessage) error
 
@@ -36,6 +21,8 @@ type Client struct {
 
 	handlers map[event.EventKind]EventHandler
 	user     *user.User
+
+	midware map[string]middleware.Middleware
 }
 
 func NewClient(s *server.Server, conn *websocket.Conn) *Client {
@@ -80,12 +67,29 @@ func (c *Client) GetUser() *user.User {
 }
 
 func (c *Client) SendEvent(kind event.EventKind, payload any) error {
-	ev, err := event.NewAnyPayload(kind, payload)
+	anyev, err := event.NewAnyPayload(kind, payload)
 	if err != nil {
 		return err
 	}
 
-	c.Send(ev.JSON())
+	ev, err := anyev.RegularEvent()
+	if err != nil {
+		return err
+	}
+
+	for _, midware := range c.midware {
+		ev, err = midware.Inject(ev)
+		if err != nil {
+			return fmt.Errorf("when running middleware: %v", err)
+		}
+	}
+
+	rawJSON, err := ev.Marshal()
+	if err != nil {
+		return err
+	}
+
+	c.Send(rawJSON)
 	return nil
 }
 
@@ -101,21 +105,4 @@ func (c *Client) Handle(ev *event.Event) error {
 	}
 
 	return nil
-}
-
-func ServeWebsockets(s *server.Server, w http.ResponseWriter, r *http.Request) *Client {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-
-	c := NewClient(s, conn)
-
-	s.Register(c)
-
-	go c.ReadPump()
-	go c.WritePump()
-
-	return c
 }
