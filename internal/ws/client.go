@@ -1,7 +1,6 @@
 package ws
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/gorilla/websocket"
@@ -12,7 +11,9 @@ import (
 	"github.com/Nykenik24/enkrypted/internal/user"
 )
 
-type EventHandler func(*Client, any) error
+type EventHandler interface {
+	Handle(*Client, any) error
+}
 
 type Client struct {
 	server *server.Server
@@ -43,30 +44,6 @@ func (c *Client) Send(data []byte) {
 	}
 }
 
-func (c *Client) CloseSend() {
-	close(c.send)
-}
-
-func (c *Client) GetServer() *server.Server {
-	return c.server
-}
-
-func (c *Client) AddHandler(kind event.EventKind, handler EventHandler) {
-	c.handlers[kind] = handler
-}
-
-func (c *Client) RemoveHandler(kind event.EventKind) {
-	delete(c.handlers, kind)
-}
-
-func (c *Client) SetUsername(username string) {
-	c.user.Username = username
-}
-
-func (c *Client) GetUser() *user.User {
-	return c.user
-}
-
 func (c *Client) SendEvent(kind event.EventKind, payload any) error {
 	ev := event.NewEvent(kind, payload)
 
@@ -85,26 +62,18 @@ func (c *Client) SendEvent(kind event.EventKind, payload any) error {
 	return nil
 }
 
-func (c *Client) Handle(ev *event.Event) error {
-	err := middleware.MultiInject(c.midware, ev)
-	if err != nil {
-		return err
-	}
+func (c *Client) CloseSend() {
+	close(c.send)
+}
 
-	rawJSON, err := ev.Marshal()
-	if err == nil {
-		log.Printf("handling event: %s", rawJSON)
-	}
+func (c *Client) GetServer() *server.Server {
+	return c.server
+}
 
-	handler, ok := c.handlers[ev.Kind]
-	if !ok {
-		return fmt.Errorf("handler for kind '%d' doesn't exist", ev.Kind)
-	}
+func (c *Client) SetUsername(username string) {
+	c.user.Username = username
+}
 
-	err = handler(c, ev.Payload)
-	if err != nil {
-		return fmt.Errorf("error when handling event:\n--> \x1b[31m%v\x1b[0m", err)
-	}
-
-	return nil
+func (c *Client) GetUser() *user.User {
+	return c.user
 }

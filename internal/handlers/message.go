@@ -14,7 +14,9 @@ type MessagePayload struct {
 	User      *user.User `json:"user"`
 }
 
-func MessageEV(c *ws.Client, payload any) error {
+type MessageHandler struct{}
+
+func (h *MessageHandler) Handle(c *ws.Client, payload any) error {
 	var msg struct {
 		Contents  string `json:"contents"`
 		Timestamp string `json:"timestamp"`

@@ -41,8 +41,8 @@ func Start() {
 			return
 		}
 
-		c.AddHandler(event.MessageEvent, handlers.MessageEV)
-		c.AddHandler(event.IdentifyEvent, handlers.IdentifyEV)
+		c.AddHandler(event.MessageEvent, &handlers.MessageHandler{})
+		c.AddHandler(event.IdentifyEvent, &handlers.IdentifyHandler{})
 	})
 
 	httpServer := &http.Server{
