@@ -60,3 +60,12 @@ type Event struct {
 	Kind    EventKind       `json:"kind"`
 	Payload json.RawMessage `json:"payload"`
 }
+
+func Unmarshal(rawJSON []byte) (*Event, error) {
+	var ev Event
+	if err := json.Unmarshal(rawJSON, &ev); err != nil {
+		return nil, err
+	}
+
+	return &ev, nil
+}

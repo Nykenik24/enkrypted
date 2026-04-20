@@ -2,6 +2,7 @@ package ws
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -79,89 +80,27 @@ func (c *Client) GetUser() *user.User {
 }
 
 func (c *Client) SendEvent(kind event.EventKind, payload any) error {
-	ev := struct {
-		Kind    event.EventKind `json:"kind"`
-		Payload any             `json:"payload"`
-	}{
-		Kind:    kind,
-		Payload: payload,
-	}
-
-	data, err := json.Marshal(ev)
+	ev, err := event.NewAnyPayload(kind, payload)
 	if err != nil {
 		return err
 	}
 
-	c.Send(data)
+	c.Send(ev.JSON())
 	return nil
 }
 
-func readPump(c *Client) {
-	defer func() {
-		c.server.Unregister(c)
-		c.conn.Close()
-	}()
-
-	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error {
-		c.conn.SetReadDeadline(time.Now().Add(pongWait))
-		return nil
-	})
-
-	for {
-		_, msg, err := c.conn.ReadMessage()
-		if err != nil {
-			log.Println("read error:", err)
-			return
-		}
-
-		var ev event.Event
-		if err := json.Unmarshal(msg, &ev); err != nil {
-			log.Println("bad event:", err)
-			continue
-		}
-
-		handler, ok := c.handlers[ev.Kind]
-		if !ok {
-			log.Printf("handler for kind '%d' doesn't exist", ev.Kind)
-			continue
-		}
-
-		err = handler(c, ev.Payload)
-		if err != nil {
-			log.Printf("error when handling event:\n--> \x1b[31m%v\x1b[0m", err)
-		}
+func (c *Client) Handle(ev *event.Event) error {
+	handler, ok := c.handlers[ev.Kind]
+	if !ok {
+		return fmt.Errorf("handler for kind '%d' doesn't exist", ev.Kind)
 	}
-}
 
-func writePump(c *Client) {
-	ticker := time.NewTicker(pingPeriod)
-	defer func() {
-		ticker.Stop()
-		c.conn.Close()
-	}()
-
-	for {
-		select {
-		case msg, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				_ = c.conn.WriteMessage(websocket.CloseMessage, nil)
-				return
-			}
-
-			if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-				return
-			}
-
-		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				return
-			}
-		}
+	err := handler(c, ev.Payload)
+	if err != nil {
+		return fmt.Errorf("error when handling event:\n--> \x1b[31m%v\x1b[0m", err)
 	}
+
+	return nil
 }
 
 func ServeWebsockets(s *server.Server, w http.ResponseWriter, r *http.Request) *Client {
@@ -175,8 +114,8 @@ func ServeWebsockets(s *server.Server, w http.ResponseWriter, r *http.Request) *
 
 	s.Register(c)
 
-	go readPump(c)
-	go writePump(c)
+	go c.ReadPump()
+	go c.WritePump()
 
 	return c
 }
