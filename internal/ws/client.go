@@ -1,7 +1,6 @@
 package ws
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/gorilla/websocket"
@@ -12,7 +11,7 @@ import (
 	"github.com/Nykenik24/enkrypted/internal/user"
 )
 
-type EventHandler func(*Client, json.RawMessage) error
+type EventHandler func(*Client, any) error
 
 type Client struct {
 	server *server.Server
@@ -67,15 +66,8 @@ func (c *Client) GetUser() *user.User {
 }
 
 func (c *Client) SendEvent(kind event.EventKind, payload any) error {
-	anyev, err := event.NewAnyPayload(kind, payload)
-	if err != nil {
-		return err
-	}
-
-	ev, err := anyev.RegularEvent()
-	if err != nil {
-		return err
-	}
+	ev := event.NewEvent(kind, payload)
+	var err error = nil
 
 	for _, midware := range c.midware {
 		ev, err = midware.Inject(ev)

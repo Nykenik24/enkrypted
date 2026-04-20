@@ -14,14 +14,19 @@ type MessagePayload struct {
 	User      *user.User `json:"user"`
 }
 
-func MessageEV(c *ws.Client, payload json.RawMessage) error {
+func MessageEV(c *ws.Client, payload any) error {
 	var msg struct {
 		Contents  string `json:"contents"`
 		Timestamp string `json:"timestamp"`
 	}
 
-	if err := json.Unmarshal(payload, &msg); err != nil {
+	rawJSON, err := json.Marshal(payload)
+	if err != nil {
 		return err
+	}
+
+	if err := json.Unmarshal(rawJSON, &msg); err != nil {
+		return nil
 	}
 
 	broadcast := MessagePayload{
