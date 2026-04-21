@@ -6,6 +6,12 @@ type MiddlewareManager struct {
 	midware map[string]Middleware
 }
 
+func NewMidwareManager() *MiddlewareManager {
+	return &MiddlewareManager{
+		midware: make(map[string]Middleware),
+	}
+}
+
 func (mm *MiddlewareManager) Register(midware Middleware) {
 	mm.midware[midware.GetName()] = midware
 }
