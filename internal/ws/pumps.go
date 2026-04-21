@@ -1,6 +1,8 @@
 package ws
 
 import (
+	"bytes"
+	"encoding/json"
 	"log"
 	"time"
 
@@ -28,9 +30,14 @@ func (c *Client) ReadPump() {
 			return
 		}
 
-		ev, err := event.Unmarshal(msg)
+		ev, err := event.EventFromJSON(msg)
 		if err != nil {
 			log.Println("bad event:", err)
+			var buf bytes.Buffer
+			if err := json.Indent(&buf, msg, "", "  "); err != nil {
+				log.Println("error when indenting:", err)
+			}
+			log.Println("raw JSON:", buf.String())
 			continue
 		}
 

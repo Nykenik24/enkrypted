@@ -1,6 +1,6 @@
 export const Events = {
-  "enkr:msg": "Message",
-  "enkr:identify": "Identify",
+  "enkr:comm:msg": "Message",
+  "enkr:room:identify": "Identify",
 };
 
 export function registerEvent(kind, label) {

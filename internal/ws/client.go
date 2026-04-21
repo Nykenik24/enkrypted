@@ -6,34 +6,29 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
-	"github.com/Nykenik24/enkrypted/internal/middleware"
-	"github.com/Nykenik24/enkrypted/internal/server"
 	"github.com/Nykenik24/enkrypted/internal/user"
 )
 
 type EventHandler interface {
-	Handle(*Client, any) error
+	Handle(*Client, *event.EventData) error
 }
 
 type Client struct {
-	server *server.Server
+	server *Hub
 	conn   *websocket.Conn
 	send   chan []byte
 
 	handlers map[event.EventKind]EventHandler
 	user     *user.User
-
-	midware map[string]middleware.Middleware
 }
 
-func NewClient(s *server.Server, conn *websocket.Conn) *Client {
+func NewClient(s *Hub, conn *websocket.Conn) *Client {
 	return &Client{
 		server:   s,
 		conn:     conn,
 		send:     make(chan []byte, 256),
 		handlers: make(map[event.EventKind]EventHandler),
 		user:     user.NewUser(user.GenericUsername()),
-		midware:  make(map[string]middleware.Middleware),
 	}
 }
 
@@ -44,15 +39,8 @@ func (c *Client) Send(data []byte) {
 	}
 }
 
-func (c *Client) SendEvent(kind event.EventKind, payload any) error {
-	ev := event.NewEvent(kind, payload)
-
-	err := middleware.MultiInject(c.midware, ev)
-	if err != nil {
-		return err
-	}
-
-	rawJSON, err := ev.Marshal()
+func (c *Client) SendEvent(ev *event.Event) error {
+	rawJSON, err := ev.JSON()
 	if err != nil {
 		return err
 	}
@@ -66,7 +54,7 @@ func (c *Client) CloseSend() {
 	close(c.send)
 }
 
-func (c *Client) GetServer() *server.Server {
+func (c *Client) GetServer() *Hub {
 	return c.server
 }
 

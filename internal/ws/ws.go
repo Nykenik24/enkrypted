@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Nykenik24/enkrypted/internal/server"
 	"github.com/gorilla/websocket"
 )
 
@@ -22,7 +21,7 @@ const (
 	maxMessageSize = 512
 )
 
-func ServeWebsockets(s *server.Server, w http.ResponseWriter, r *http.Request) *Client {
+func ServeWebsockets(s *Hub, w http.ResponseWriter, r *http.Request) *Client {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
