@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/middleware"
 	"github.com/Nykenik24/enkrypted/internal/user"
 )
 
@@ -20,15 +21,18 @@ type Client struct {
 
 	handlers map[event.EventKind]EventHandler
 	user     *user.User
+
+	midwareManager *middleware.MiddlewareManager
 }
 
 func NewClient(s *Hub, conn *websocket.Conn) *Client {
 	return &Client{
-		server:   s,
-		conn:     conn,
-		send:     make(chan []byte, 256),
-		handlers: make(map[event.EventKind]EventHandler),
-		user:     user.NewUser(user.GenericUsername()),
+		server:         s,
+		conn:           conn,
+		send:           make(chan []byte, 256),
+		handlers:       make(map[event.EventKind]EventHandler),
+		user:           user.NewUser(user.GenericUsername()),
+		midwareManager: middleware.NewMidwareManager(),
 	}
 }
 
@@ -40,6 +44,12 @@ func (c *Client) Send(data []byte) {
 }
 
 func (c *Client) SendEvent(ev *event.Event) error {
+	var err error = nil
+	ev, err = c.midwareManager.MultiInject(ev)
+	if err != nil {
+		return err
+	}
+
 	rawJSON, err := ev.JSON()
 	if err != nil {
 		return err
