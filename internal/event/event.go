@@ -3,79 +3,13 @@ package event
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
+	"log"
 )
 
-type EventKind int
+type EventData map[string]any
 
-const (
-	MessageEvent EventKind = iota
-	IdentifyEvent
-	HandshakeStartEvent
-	HandshakeReplyEvent
-)
-
-var eventKindToString = map[EventKind]string{
-	MessageEvent:  "enkr:comm:msg",
-	IdentifyEvent: "enkr:room:identify",
-}
-
-func stringToEventKind(str string) (EventKind, error) {
-	for k, v := range eventKindToString {
-		if v == str {
-			return k, nil
-		}
-	}
-
-	return 0, fmt.Errorf("Event '%s' doesn't exist", str)
-}
-
-var kindStringRegex = regexp.MustCompile(`^[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$`)
-
-func validateKindString(s string) error {
-	if !kindStringRegex.Match([]byte(s)) {
-		return fmt.Errorf("event kind string doesn't follow the correct format")
-	}
-	return nil
-}
-
-func (k EventKind) MarshalJSON() ([]byte, error) {
-	return json.Marshal(eventKindToString[k])
-}
-
-func (k *EventKind) UnmarshalJSON(b []byte) error {
-	var s string
-	if err := json.Unmarshal(b, &s); err != nil {
-		return err
-	}
-
-	if err := validateKindString(s); err != nil {
-		return err
-	}
-
-	v, err := stringToEventKind(s)
-	if err != nil {
-		return err
-	}
-
-	*k = v
-	return nil
-}
-
-type Event struct {
-	Kind    EventKind `json:"kind"`
-	Payload any       `json:"payload"`
-}
-
-func NewEvent(kind EventKind, payload any) *Event {
-	return &Event{
-		Kind:    kind,
-		Payload: payload,
-	}
-}
-
-func (ev *Event) Marshal() ([]byte, error) {
-	rawJSON, err := json.MarshalIndent(ev, "", "\t")
+func (ed *EventData) JSON() ([]byte, error) {
+	rawJSON, err := json.Marshal(ed)
 	if err != nil {
 		return nil, err
 	}
@@ -83,11 +17,43 @@ func (ev *Event) Marshal() ([]byte, error) {
 	return rawJSON, nil
 }
 
-func Unmarshal(rawJSON []byte) (*Event, error) {
-	var ev Event
-	if err := json.Unmarshal(rawJSON, &ev); err != nil {
+type Event struct {
+	Kind *EventKind `json:"kind"`
+	Data *EventData `json:"data"`
+}
+
+type eventJSON struct {
+	Kind string         `json:"kind"`
+	Data map[string]any `json:"data"`
+}
+
+func EventFromJSON(rawJSON []byte) (*Event, error) {
+	var evJSON eventJSON
+	log.Println("Unmarshaling raw JSON into eventJSON")
+	if err := json.Unmarshal(rawJSON, &evJSON); err != nil {
 		return nil, err
 	}
 
-	return &ev, nil
+	log.Printf("Getting kind from string '%s'", evJSON.Kind)
+	kind, err := KindFromString(evJSON.Kind)
+	if err != nil {
+		return nil, fmt.Errorf("KindFromString: %s", err)
+	}
+
+	log.Println("Building event")
+	ev := &Event{
+		Data: (*EventData)(&evJSON.Data),
+		Kind: kind,
+	}
+
+	return ev, nil
+}
+
+func (ev *Event) JSON() ([]byte, error) {
+	rawJSON, err := json.MarshalIndent(ev, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	return rawJSON, nil
 }

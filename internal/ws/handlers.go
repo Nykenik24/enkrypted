@@ -5,11 +5,14 @@ import (
 	"log"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
-	"github.com/Nykenik24/enkrypted/internal/middleware"
 )
 
-func (c *Client) AddHandler(kind event.EventKind, handler EventHandler) {
-	c.handlers[kind] = handler
+func (c *Client) AddHandler(kindStr string, handler EventHandler) {
+	kind, err := event.KindFromString(kindStr)
+	if err != nil {
+		panic(err)
+	}
+	c.handlers[*kind] = handler
 }
 
 func (c *Client) RemoveHandler(kind event.EventKind) {
@@ -17,22 +20,18 @@ func (c *Client) RemoveHandler(kind event.EventKind) {
 }
 
 func (c *Client) Handle(ev *event.Event) error {
-	err := middleware.MultiInject(c.midware, ev)
-	if err != nil {
-		return err
-	}
 
-	rawJSON, err := ev.Marshal()
+	rawJSON, err := ev.JSON()
 	if err == nil {
 		log.Printf("handling event: %s", rawJSON)
 	}
 
-	handler, ok := c.handlers[ev.Kind]
+	handler, ok := c.handlers[*ev.Kind]
 	if !ok {
-		return fmt.Errorf("handler for kind '%d' doesn't exist", ev.Kind)
+		return fmt.Errorf("handler for kind '%s' doesn't exist", ev.Kind.String())
 	}
 
-	err = handler.Handle(c, ev.Payload)
+	err = handler.Handle(c, ev.Data)
 	if err != nil {
 		return fmt.Errorf("error when handling event:\n--> \x1b[31m%v\x1b[0m", err)
 	}
