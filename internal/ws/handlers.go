@@ -20,7 +20,6 @@ func (c *Client) RemoveHandler(kind event.EventKind) {
 }
 
 func (c *Client) Handle(ev *event.Event) error {
-
 	rawJSON, err := ev.JSON()
 	if err == nil {
 		log.Printf("handling event: %s", rawJSON)
