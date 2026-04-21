@@ -9,22 +9,28 @@ import (
 type EventKind int
 
 const (
-	PingEvent EventKind = iota
-	MessageEvent
+	MessageEvent EventKind = iota
 	IdentifyEvent
+	HandshakeStartEvent
+	HandshakeReplyEvent
 )
 
 var eventKindToString = map[EventKind]string{
-	MessageEvent:  "enkr:msg",
-	IdentifyEvent: "enkr:identify",
+	MessageEvent:  "enkr:comm:msg",
+	IdentifyEvent: "enkr:room:identify",
 }
 
-var stringToEventKind = map[string]EventKind{
-	"enkr:msg":      MessageEvent,
-	"enkr:identify": IdentifyEvent,
+func stringToEventKind(str string) (EventKind, error) {
+	for k, v := range eventKindToString {
+		if v == str {
+			return k, nil
+		}
+	}
+
+	return 0, fmt.Errorf("Event '%s' doesn't exist", str)
 }
 
-var kindStringRegex = regexp.MustCompile(`^[A-Za-z0-9_-]+(?::[A-Za-z0-9_-]+)*$`)
+var kindStringRegex = regexp.MustCompile(`^[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$`)
 
 func validateKindString(s string) error {
 	if !kindStringRegex.Match([]byte(s)) {
@@ -47,9 +53,9 @@ func (k *EventKind) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	v, ok := stringToEventKind[s]
-	if !ok {
-		return fmt.Errorf("unknown event kind: %s", s)
+	v, err := stringToEventKind(s)
+	if err != nil {
+		return err
 	}
 
 	*k = v

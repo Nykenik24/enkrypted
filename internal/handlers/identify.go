@@ -12,7 +12,9 @@ type IdentifyPayload struct {
 	Username string `json:"username"`
 }
 
-func IdentifyEV(c *ws.Client, payload any) error {
+type IdentifyHandler struct{}
+
+func (h *IdentifyHandler) Handle(c *ws.Client, payload any) error {
 	var p IdentifyPayload
 
 	rawJSON, err := json.Marshal(payload)
