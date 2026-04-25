@@ -145,7 +145,7 @@ func (h *Hub) AddHandler(kind string, handler EventHandler) {
 }
 
 func (h *Hub) AddHandlers(handlers map[string]EventHandler) {
-	maps.Copy(handlers, h.handlers)
+	maps.Copy(h.handlers, handlers)
 }
 
 func (h *Hub) BroadcastEvent(ev *event.Event) error {
