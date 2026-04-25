@@ -9,7 +9,7 @@ import (
 type EventData map[string]any
 
 func (ed *EventData) JSON() ([]byte, error) {
-	rawJSON, err := json.Marshal(ed)
+	rawJSON, err := json.MarshalIndent(ed, "", "  ")
 	if err != nil {
 		return nil, err
 	}
@@ -17,9 +17,20 @@ func (ed *EventData) JSON() ([]byte, error) {
 	return rawJSON, nil
 }
 
+func (ed *EventData) Get(key string) any {
+	return (map[string]any)(*ed)[key]
+}
+
+type Target struct {
+	RoomID    *uint64 `json:"roomId,omitempty"`
+	UserID    *uint64 `json:"userId,omitempty"`
+	Broadcast bool    `json:"broadcast,omitempty"`
+}
+
 type Event struct {
-	Kind *EventKind `json:"kind"`
-	Data *EventData `json:"data"`
+	Kind   *EventKind `json:"kind"`
+	Data   *EventData `json:"data"`
+	Target *Target    `json:"target,omitempty"`
 }
 
 type eventJSON struct {
@@ -29,24 +40,32 @@ type eventJSON struct {
 
 func EventFromJSON(rawJSON []byte) (*Event, error) {
 	var evJSON eventJSON
-	log.Println("Unmarshaling raw JSON into eventJSON")
+	log.Println("unmarshaling raw JSON into eventJSON")
 	if err := json.Unmarshal(rawJSON, &evJSON); err != nil {
 		return nil, err
 	}
 
-	log.Printf("Getting kind from string '%s'", evJSON.Kind)
+	log.Printf("getting kind from string '%s'", evJSON.Kind)
 	kind, err := KindFromString(evJSON.Kind)
 	if err != nil {
 		return nil, fmt.Errorf("KindFromString: %s", err)
 	}
 
-	log.Println("Building event")
+	log.Println("building event")
 	ev := &Event{
 		Data: (*EventData)(&evJSON.Data),
 		Kind: kind,
 	}
 
 	return ev, nil
+}
+
+func (e *Event) Decode(v any) error {
+	raw, err := json.Marshal(e.Data)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(raw, v)
 }
 
 func (ev *Event) JSON() ([]byte, error) {
@@ -56,4 +75,19 @@ func (ev *Event) JSON() ([]byte, error) {
 	}
 
 	return rawJSON, nil
+}
+
+func (e *Event) ToRoom(id uint64) *Event {
+	e.Target = &Target{RoomID: &id}
+	return e
+}
+
+func (e *Event) ToUser(id uint64) *Event {
+	e.Target = &Target{UserID: &id}
+	return e
+}
+
+func (e *Event) ToAll() *Event {
+	e.Target = &Target{Broadcast: true}
+	return e
 }

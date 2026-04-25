@@ -8,6 +8,7 @@ import (
 
 	builtin_ev "github.com/Nykenik24/enkrypted/internal/builtin/events"
 	"github.com/Nykenik24/enkrypted/internal/handlers"
+	"github.com/Nykenik24/enkrypted/internal/server"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
 
@@ -21,14 +22,31 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "web/index.html")
 }
 
+var default_handlers = map[string]ws.EventHandler{
+	builtin_ev.MessageEventKind.String(): &handlers.MessageHandler{},
+
+	builtin_ev.IdentifyEventKind.String(): &handlers.IdentifyHandler{},
+	builtin_ev.ConnectEventKind.String():  &handlers.ConnectHandler{},
+
+	builtin_ev.JoinRoomEventKind.String():  &handlers.JoinRoomHandler{},
+	builtin_ev.LeaveRoomEventKind.String(): &handlers.LeaveRoomHandler{},
+
+	builtin_ev.CreateRoomEventKind.String(): &handlers.CreateRoomHandler{},
+	builtin_ev.RemoveRoomEventKind.String(): &handlers.RemoveRoomHandler{},
+}
+
 func Start() {
 	flag.Parse()
 
-	hub := ws.NewHub()
+	srv := server.NewServer()
+	hub := srv.Hub
+
+	hub.AddHandlers(default_handlers)
+
 	go hub.Run()
 
-	http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir("web"))))
-	http.HandleFunc("/", serveHome)
+	// http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir("web"))))
+	// http.HandleFunc("/", serveHome)
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("WS: %s", r.RemoteAddr)
@@ -40,8 +58,9 @@ func Start() {
 			return
 		}
 
-		c.AddHandler(builtin_ev.MessageEventKind, &handlers.MessageHandler{})
-		c.AddHandler(builtin_ev.IdentifyEventKind, &handlers.IdentifyHandler{})
+		connect := builtin_ev.NewConnectEvent(c.GetID())
+
+		hub.Emit(c, builtin_ev.Generic(connect))
 	})
 
 	httpServer := &http.Server{

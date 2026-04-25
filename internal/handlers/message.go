@@ -1,35 +1,33 @@
 package handlers
 
 import (
-	"encoding/json"
+	"time"
 
 	builtin_ev "github.com/Nykenik24/enkrypted/internal/builtin/events"
-	"github.com/Nykenik24/enkrypted/internal/event"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
 
 type MessageHandler struct{}
 
-func (h *MessageHandler) Handle(c *ws.Client, payload *event.EventData) error {
+func (h *MessageHandler) Handle(ctx *ws.Context) error {
 	var msg struct {
-		Contents  string `json:"contents"`
-		Timestamp string `json:"timestamp"`
+		RoomID   uint64 `json:"roomId"`
+		Contents string `json:"contents"`
 	}
 
-	rawJSON, err := json.Marshal(payload)
-	if err != nil {
+	if err := ctx.Bind(&msg); err != nil {
 		return err
-	}
-
-	if err := json.Unmarshal(rawJSON, &msg); err != nil {
-		return nil
 	}
 
 	ev := builtin_ev.NewMessageEvent(
 		msg.Contents,
-		msg.Timestamp,
-		c.GetUser(),
+		time.Now().Format(time.RFC3339),
+		ctx.Client.GetUser(),
 	)
 
-	return c.GetServer().BroadcastEvent(builtin_ev.ToGeneric(ev))
+	ctx.Broadcast(
+		builtin_ev.Generic(ev).ToRoom(msg.RoomID),
+	)
+
+	return nil
 }

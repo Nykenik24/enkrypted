@@ -43,6 +43,10 @@ func (ek *EventKind) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ek.String())
 }
 
+func (ek *EventKind) CompareString(kindStr string) bool {
+	return ek.String() == kindStr
+}
+
 func KindFromJSON(b []byte) (*EventKind, error) {
 	var kind EventKind
 	if err := json.Unmarshal(b, &kind); err != nil {
