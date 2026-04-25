@@ -17,7 +17,6 @@
 
     const login = () => {
         if (!connected) {
-            alert("Not connected to server");
             return;
         }
         send({ kind: "enkr:room:identify", data: { username: username } });
