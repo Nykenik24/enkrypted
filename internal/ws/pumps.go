@@ -10,7 +10,7 @@ import (
 
 func (c *Client) ReadPump() {
 	defer func() {
-		c.server.Unregister(c)
+		c.hub.Unregister(c)
 		c.conn.Close()
 	}()
 
@@ -27,7 +27,8 @@ func (c *Client) ReadPump() {
 			continue
 		}
 
-		c.server.Emit(c, ev)
+		log.Printf("event id=%s", ev.ID)
+		c.hub.Emit(c, ev)
 	}
 }
 

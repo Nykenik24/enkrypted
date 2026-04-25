@@ -11,13 +11,13 @@ import (
 )
 
 type EventHandler interface {
-	Handle(*Context) error
+	Handle(*Context) (*event.Event, error)
 }
 
 type Client struct {
-	server *Hub
-	conn   *websocket.Conn
-	send   chan []byte
+	hub  *Hub
+	conn *websocket.Conn
+	send chan []byte
 
 	handlers map[string]EventHandler
 	user     *user.User
@@ -27,7 +27,7 @@ type Client struct {
 
 func NewClient(s *Hub, conn *websocket.Conn) *Client {
 	return &Client{
-		server:         s,
+		hub:            s,
 		conn:           conn,
 		send:           make(chan []byte, 256),
 		handlers:       make(map[string]EventHandler),
@@ -67,7 +67,7 @@ func (c *Client) CloseSend() {
 }
 
 func (c *Client) GetHub() *Hub {
-	return c.server
+	return c.hub
 }
 
 func (c *Client) SetUsername(username string) {

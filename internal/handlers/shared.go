@@ -36,5 +36,6 @@ func Base(ev BuiltinEvent) *event.Event {
 	return &event.Event{
 		Kind: ev.Kind(),
 		Data: ev.Data(),
+		ID:   event.GenerateID(),
 	}
 }

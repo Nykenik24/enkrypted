@@ -25,30 +25,30 @@ func (ev *CreateRoomEvent) Kind() *event.EventKind {
 
 type CreateRoomHandler struct{}
 
-func (h *CreateRoomHandler) Handle(ctx *ws.Context) error {
+func (h *CreateRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 	ev := ctx.Event
 
 	if !ev.HasAuth() {
-		return fmt.Errorf("%s must have auth information", CreateRoomEventKind.String())
+		return nil, fmt.Errorf("%s must have auth information", CreateRoomEventKind.String())
 	}
 
 	passwd, err := ev.GetPassword()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	auth := ctx.Server.GetAuth()
 
 	if !auth.Hasher.VerifyPassword(passwd, auth.GetAdminHash()) {
-		return fmt.Errorf("wrong password")
+		return nil, fmt.Errorf("wrong password")
 	}
 
 	_, err = ctx.Server.AddRoom()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	BroadcastMessage(ctx, "created room")
 
-	return nil
+	return nil, nil
 }

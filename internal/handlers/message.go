@@ -43,11 +43,11 @@ func (ev *MessageEvent) Kind() *event.EventKind {
 
 type MessageHandler struct{}
 
-func (h *MessageHandler) Handle(ctx *ws.Context) error {
+func (h *MessageHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 	var data MessageEvent
 
 	if err := ctx.BindData(&data); err != nil {
-		return err
+		return nil, err
 	}
 
 	ev := NewMessageEvent(
@@ -60,5 +60,5 @@ func (h *MessageHandler) Handle(ctx *ws.Context) error {
 		Base(ev).ToRoom(data.RoomID),
 	)
 
-	return nil
+	return nil, nil
 }

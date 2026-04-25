@@ -124,8 +124,14 @@ func (h *Hub) handleEvent(env *Envelope) {
 		Server: h.server,
 	}
 
-	if err := handler.Handle(ctx); err != nil {
+	reply, err := handler.Handle(ctx)
+
+	if err != nil {
 		log.Printf("handler error: %v", err)
+	}
+
+	if reply != nil {
+		_ = ctx.Client.SendEvent(reply.ToUser(ctx.Client.GetID()))
 	}
 }
 
