@@ -4,38 +4,61 @@ import (
 	"fmt"
 	"time"
 
-	builtin_ev "github.com/Nykenik24/enkrypted/internal/builtin/events"
+	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/user"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
+
+var MessageEventKind = buildKind(RoomNamespace, "message")
+
+type MessageEvent struct {
+	Contents  string     `json:"contents"`
+	Timestamp string     `json:"timestamp"`
+	User      *user.User `json:"user"`
+	ID        uint64     `json:"id"`
+}
+
+func NewMessageEvent(contents, timestamp string, user *user.User) *MessageEvent {
+	lastMessageID++
+	return &MessageEvent{
+		Contents:  contents,
+		Timestamp: timestamp,
+		User:      user,
+		ID:        lastMessageID,
+	}
+}
+
+func (ev *MessageEvent) Data() *event.EventData {
+	return &event.EventData{
+		"contents":  ev.Contents,
+		"timestamp": ev.Timestamp,
+		"user":      ev.User,
+		"id":        ev.ID,
+	}
+}
+
+func (ev *MessageEvent) Kind() *event.EventKind {
+	return MessageEventKind
+}
 
 type MessageHandler struct{}
 
 func (h *MessageHandler) Handle(ctx *ws.Context) error {
 	var data builtin_ev.MessageEvent
 
-	if err := ctx.BindData(&data); err != nil {
+	if err := ctx.BindData(&msg); err != nil {
 		return err
 	}
 
-	err := builtin_ev.ValidateMessage(&data)
-	if err != nil {
-		return err
-	}
+	ev := NewMessageEvent(
+		msg.Contents,
+		time.Now().Format(time.RFC3339),
+		ctx.Client.GetUser(),
+	)
 
-	if data.RoomID != nil {
-		ev := builtin_ev.NewMessageEvent(
-			data.Contents,
-			time.Now().Format(time.RFC3339),
-			ctx.Client.GetUser(),
-			data.RoomID,
-		)
-
-		ctx.Broadcast(
-			builtin_ev.Generic(ev).ToRoom(*data.RoomID),
-		)
-	} else {
-		return fmt.Errorf("TODO: global messages")
-	}
+	ctx.Broadcast(
+		Base(ev).ToRoom(msg.RoomID),
+	)
 
 	return nil
 }

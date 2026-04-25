@@ -1,14 +1,32 @@
 package handlers
 
 import (
-	builtin_ev "github.com/Nykenik24/enkrypted/internal/builtin/events"
+	"github.com/Nykenik24/enkrypted/internal/event"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
+
+var JoinRoomEventKind = buildKind(RoomNamespace, "join")
+
+type JoinRoomEvent struct {
+	RoomID uint64 `json:"roomId"`
+}
+
+func NewJoinRoomEvent(roomId uint64) *JoinRoomEvent {
+	return &JoinRoomEvent{RoomID: roomId}
+}
+
+func (ev *JoinRoomEvent) Data() *event.EventData {
+	return &event.EventData{"roomId": ev.RoomID}
+}
+
+func (ev *JoinRoomEvent) Kind() *event.EventKind {
+	return JoinRoomEventKind
+}
 
 type JoinRoomHandler struct{}
 
 func (h *JoinRoomHandler) Handle(ctx *ws.Context) error {
-	var ev builtin_ev.JoinRoomEvent
+	var ev JoinRoomEvent
 
 	if err := ctx.BindData(&ev); err != nil {
 		return err

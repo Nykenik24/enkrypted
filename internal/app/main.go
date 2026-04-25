@@ -1,4 +1,4 @@
-package app
+package enkrypt
 
 import (
 	"flag"
@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	builtin_ev "github.com/Nykenik24/enkrypted/internal/builtin/events"
 	"github.com/Nykenik24/enkrypted/internal/handlers"
 	"github.com/Nykenik24/enkrypted/internal/server"
 	"github.com/Nykenik24/enkrypted/internal/ws"
@@ -23,31 +22,32 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "web/index.html")
 }
 
-var default_handlers = map[string]ws.EventHandler{
-	builtin_ev.MessageEventKind.String(): &handlers.MessageHandler{},
-
-	builtin_ev.IdentifyEventKind.String(): &handlers.IdentifyHandler{},
-	builtin_ev.ConnectEventKind.String():  &handlers.ConnectHandler{},
-
-	builtin_ev.JoinRoomEventKind.String():  &handlers.JoinRoomHandler{},
-	builtin_ev.LeaveRoomEventKind.String(): &handlers.LeaveRoomHandler{},
-
-	builtin_ev.CreateRoomEventKind.String(): &handlers.CreateRoomHandler{},
-	builtin_ev.RemoveRoomEventKind.String(): &handlers.RemoveRoomHandler{},
+type App struct {
+	Handlers map[string]ws.EventHandler
+	Server   *server.Server
 }
 
-func Start() {
-	flag.Parse()
+var default_handlers = map[string]ws.EventHandler{
+	handlers.MessageEventKind.String(): &handlers.MessageHandler{},
 
-	srv := server.NewServer(server.Config(*passwd))
-	hub := srv.Hub
+	handlers.IdentifyEventKind.String(): &handlers.IdentifyHandler{},
+	handlers.ConnectEventKind.String():  &handlers.ConnectHandler{},
 
-	hub.AddHandlers(default_handlers)
+	handlers.JoinRoomEventKind.String():  &handlers.JoinRoomHandler{},
+	handlers.LeaveRoomEventKind.String(): &handlers.LeaveRoomHandler{},
 
-	go hub.Run()
+	handlers.CreateRoomEventKind.String(): &handlers.CreateRoomHandler{},
+	handlers.RemoveRoomEventKind.String(): &handlers.RemoveRoomHandler{},
+}
 
-	// http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir("web"))))
-	// http.HandleFunc("/", serveHome)
+func NewApp() *App {
+	return &App{
+		Handlers: default_handlers,
+	}
+}
+
+func (app *App) ServeHTTP() {
+	hub := app.Server.Hub
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("WS: %s", r.RemoteAddr)
@@ -59,9 +59,9 @@ func Start() {
 			return
 		}
 
-		connect := builtin_ev.NewConnectEvent(c.GetID())
+		connect := handlers.NewConnectEvent(c.GetID())
 
-		hub.Emit(c, builtin_ev.Generic(connect))
+		hub.Emit(c, handlers.Base(connect))
 	})
 
 	httpServer := &http.Server{
@@ -73,4 +73,18 @@ func Start() {
 
 	log.Printf("server listening on %s", *addr)
 	log.Fatal(httpServer.ListenAndServe())
+
+	// http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir("web"))))
+	// http.HandleFunc("/", serveHome)
+}
+
+func (app *App) StartHub() {
+	flag.Parse()
+
+	app.Server = server.NewServer(server.Config(*passwd))
+	hub := app.Server.Hub
+
+	hub.AddHandlers(app.Handlers)
+
+	go hub.Run()
 }
