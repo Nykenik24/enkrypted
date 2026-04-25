@@ -1,5 +1,11 @@
 package event
 
+type Target struct {
+	RoomID    *uint64 `json:"roomId,omitempty"`
+	UserID    *uint64 `json:"userId,omitempty"`
+	Broadcast bool    `json:"broadcast,omitempty"`
+}
+
 func (e *Event) ToRoom(id uint64) *Event {
 	e.Target = &Target{RoomID: &id}
 	return e

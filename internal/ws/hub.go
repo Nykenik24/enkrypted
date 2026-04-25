@@ -3,6 +3,7 @@ package ws
 import (
 	"fmt"
 	"log"
+	"maps"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
 	"github.com/Nykenik24/enkrypted/internal/middleware"
@@ -144,9 +145,7 @@ func (h *Hub) AddHandler(kind string, handler EventHandler) {
 }
 
 func (h *Hub) AddHandlers(handlers map[string]EventHandler) {
-	for k, v := range handlers {
-		h.handlers[k] = v
-	}
+	maps.Copy(handlers, h.handlers)
 }
 
 func (h *Hub) BroadcastEvent(ev *event.Event) error {

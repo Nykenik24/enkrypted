@@ -1,7 +1,10 @@
 package main
 
-import "github.com/Nykenik24/enkrypted/internal/app"
+import enkrypt "github.com/Nykenik24/enkrypted/internal/app"
 
 func main() {
-	app.Start()
+	app := enkrypt.NewApp()
+
+	app.StartHub()
+	app.ServeHTTP()
 }
