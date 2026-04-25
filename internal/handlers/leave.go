@@ -25,19 +25,19 @@ func (ev *LeaveRoomEvent) Kind() *event.EventKind {
 
 type LeaveRoomHandler struct{}
 
-func (h *LeaveRoomHandler) Handle(ctx *ws.Context) error {
+func (h *LeaveRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 	var ev LeaveRoomEvent
 
 	if err := ctx.BindData(&ev); err != nil {
-		return err
+		return nil, err
 	}
 
 	room, err := ctx.Server.GetRoom(ev.RoomID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	room.Leave(ctx.Client)
 
-	return nil
+	return nil, nil
 }

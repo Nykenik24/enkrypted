@@ -25,21 +25,21 @@ func (ev *JoinRoomEvent) Kind() *event.EventKind {
 
 type JoinRoomHandler struct{}
 
-func (h *JoinRoomHandler) Handle(ctx *ws.Context) error {
+func (h *JoinRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 	var ev JoinRoomEvent
 
 	if err := ctx.BindData(&ev); err != nil {
-		return err
+		return nil, err
 	}
 
 	room, err := ctx.Server.GetRoom(ev.RoomID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := room.Join(ctx.Client); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }

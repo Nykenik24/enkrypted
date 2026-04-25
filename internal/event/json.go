@@ -8,6 +8,7 @@ import (
 
 type eventJSON struct {
 	Kind string         `json:"kind"`
+	ID   string         `json:"id"`
 	Data map[string]any `json:"data"`
 	Auth *AuthInfo      `json:"auth,omitempty"`
 }
@@ -27,6 +28,7 @@ func EventFromJSON(rawJSON []byte) (*Event, error) {
 
 	ev := &Event{
 		Data:     (*EventData)(&evJSON.Data),
+		ID:       evJSON.ID,
 		Kind:     kind,
 		AuthInfo: evJSON.Auth,
 	}

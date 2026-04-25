@@ -8,7 +8,10 @@ import (
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
 
-var IdentifyEventKind = buildKind(RoomNamespace, "identify")
+var (
+	IdentifyEventKind = buildKind(RoomNamespace, "identify")
+	IdentifyAckKind   = buildKind(RoomNamespace, "identify_ack")
+)
 
 type IdentifyEvent struct {
 	Username string `json:"username"`
@@ -30,13 +33,31 @@ func (ev *IdentifyEvent) Kind() *event.EventKind {
 	return IdentifyEventKind
 }
 
+type IdentifyAcknowledge struct {
+	Status int `json:"status"`
+}
+
+func NewIdentifyAck(status int) *IdentifyAcknowledge {
+	return &IdentifyAcknowledge{
+		Status: status,
+	}
+}
+
+func (ev *IdentifyAcknowledge) Data() *event.EventData {
+	return &event.EventData{"status": ev.Status}
+}
+
+func (ev *IdentifyAcknowledge) Kind() *event.EventKind {
+	return IdentifyAckKind
+}
+
 type IdentifyHandler struct{}
 
-func (h *IdentifyHandler) Handle(ctx *ws.Context) error {
+func (h *IdentifyHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 	var ev IdentifyEvent
 
 	if err := ctx.BindData(&ev); err != nil {
-		return err
+		return nil, err
 	}
 
 	if ev.Username == "" {
@@ -46,5 +67,5 @@ func (h *IdentifyHandler) Handle(ctx *ws.Context) error {
 	ctx.Client.SetUsername(ev.Username)
 
 	BroadcastMessage(ctx, fmt.Sprintf("user joined %s", ctx.Client.GetUser().Username))
-	return nil
+	return Base(NewIdentifyAck(0)).RepliesTo(ctx.Event.ID), nil
 }

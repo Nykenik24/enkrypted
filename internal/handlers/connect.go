@@ -34,7 +34,7 @@ func (ev *ConnectEvent) Kind() *event.EventKind {
 
 type ConnectHandler struct{}
 
-func (h *ConnectHandler) Handle(ctx *ws.Context) error {
+func (h *ConnectHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 	// could add some logic here later (such as handshaking?).
-	return nil
+	return nil, nil
 }
