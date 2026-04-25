@@ -47,6 +47,7 @@ func (s *Server) GetRoom(id uint64) (ws.Room, error) {
 	if !ok {
 		return nil, fmt.Errorf("room %d not found", id)
 	}
+
 	return room, nil
 }
 

@@ -15,6 +15,7 @@ type MessageEvent struct {
 	Timestamp string     `json:"timestamp"`
 	User      *user.User `json:"user"`
 	ID        uint64     `json:"id"`
+	RoomID    uint64     `json:"roomId"`
 }
 
 func NewMessageEvent(contents, timestamp string, user *user.User) *MessageEvent {
@@ -43,23 +44,20 @@ func (ev *MessageEvent) Kind() *event.EventKind {
 type MessageHandler struct{}
 
 func (h *MessageHandler) Handle(ctx *ws.Context) error {
-	var msg struct {
-		RoomID   uint64 `json:"roomId"`
-		Contents string `json:"contents"`
-	}
+	var data MessageEvent
 
-	if err := ctx.BindData(&msg); err != nil {
+	if err := ctx.BindData(&data); err != nil {
 		return err
 	}
 
 	ev := NewMessageEvent(
-		msg.Contents,
+		data.Contents,
 		time.Now().Format(time.RFC3339),
 		ctx.Client.GetUser(),
 	)
 
 	ctx.Broadcast(
-		Base(ev).ToRoom(msg.RoomID),
+		Base(ev).ToRoom(data.RoomID),
 	)
 
 	return nil
