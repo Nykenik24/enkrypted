@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"time"
 
 	builtin_ev "github.com/Nykenik24/enkrypted/internal/builtin/events"
 	"github.com/Nykenik24/enkrypted/internal/ws"
