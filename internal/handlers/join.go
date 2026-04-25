@@ -10,7 +10,7 @@ type JoinRoomHandler struct{}
 func (h *JoinRoomHandler) Handle(ctx *ws.Context) error {
 	var ev builtin_ev.JoinRoomEvent
 
-	if err := ctx.Bind(&ev); err != nil {
+	if err := ctx.BindData(&ev); err != nil {
 		return err
 	}
 

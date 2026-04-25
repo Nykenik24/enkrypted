@@ -28,7 +28,7 @@ func (h *RemoveRoomHandler) Handle(ctx *ws.Context) error {
 	}
 
 	var data builtin_ev.RemoveRoomEvent
-	if err := ctx.Bind(&data); err != nil {
+	if err := ctx.BindData(&data); err != nil {
 		return err
 	}
 

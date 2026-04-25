@@ -15,7 +15,7 @@ func (h *MessageHandler) Handle(ctx *ws.Context) error {
 		Contents string `json:"contents"`
 	}
 
-	if err := ctx.Bind(&msg); err != nil {
+	if err := ctx.BindData(&data); err != nil {
 		return err
 	}
 

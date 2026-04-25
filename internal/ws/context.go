@@ -11,7 +11,7 @@ type Context struct {
 	Server Server
 }
 
-func (ctx *Context) Bind(v any) error {
+func (ctx *Context) BindData(v any) error {
 	return ctx.Event.Decode(v)
 }
 

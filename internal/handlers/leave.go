@@ -10,7 +10,7 @@ type LeaveRoomHandler struct{}
 func (h *LeaveRoomHandler) Handle(ctx *ws.Context) error {
 	var ev builtin_ev.LeaveRoomEvent
 
-	if err := ctx.Bind(&ev); err != nil {
+	if err := ctx.BindData(&ev); err != nil {
 		return err
 	}
 
