@@ -1,6 +1,34 @@
 <script lang="ts">
 	import "./layout.css";
 	import favicon from "$lib/assets/favicon.svg";
+	import { onMount } from "svelte";
+	import {
+		connect,
+		disconnect,
+		wsStore,
+		type WSMessage,
+	} from "$lib/client/websocket";
+
+	let connected = $state(false);
+
+	let messages = $state<WSMessage[]>([]);
+	$effect(() => {
+		console.log($inspect(messages));
+	});
+
+	onMount(() => {
+		connect("ws://localhost:8080/ws");
+
+		const unsubscribe = wsStore.subscribe((value) => {
+			connected = value.connected;
+			messages = value.messages;
+		});
+
+		return () => {
+			unsubscribe();
+			disconnect();
+		};
+	});
 
 	let { children } = $props();
 </script>
