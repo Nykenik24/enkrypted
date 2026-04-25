@@ -11,7 +11,7 @@ type IdentifyHandler struct{}
 func (h *IdentifyHandler) Handle(ctx *ws.Context) error {
 	var ev builtin_ev.IdentifyEvent
 
-	if err := ctx.Bind(&ev); err != nil {
+	if err := ctx.BindData(&ev); err != nil {
 		return err
 	}
 

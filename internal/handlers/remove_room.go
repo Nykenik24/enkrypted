@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"time"
 
 	builtin_ev "github.com/Nykenik24/enkrypted/internal/builtin/events"
 	"github.com/Nykenik24/enkrypted/internal/ws"
@@ -28,7 +27,7 @@ func (h *RemoveRoomHandler) Handle(ctx *ws.Context) error {
 	}
 
 	var data builtin_ev.RemoveRoomEvent
-	if err := ctx.Bind(&data); err != nil {
+	if err := ctx.BindData(&data); err != nil {
 		return err
 	}
 
@@ -37,13 +36,7 @@ func (h *RemoveRoomHandler) Handle(ctx *ws.Context) error {
 		return err
 	}
 
-	ctx.Broadcast(builtin_ev.Generic(
-		builtin_ev.NewMessageEvent(
-			"removed room",
-			time.Now().Format(time.RFC3339),
-			ctx.Client.GetUser(),
-		),
-	))
+	builtin_ev.BroadcastMessage(ctx, fmt.Sprintf("removed room %d", data.RoomID))
 
 	return nil
 }
