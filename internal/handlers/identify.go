@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+
 	"github.com/Nykenik24/enkrypted/internal/event"
 	"github.com/Nykenik24/enkrypted/internal/user"
 	"github.com/Nykenik24/enkrypted/internal/ws"
@@ -42,5 +44,7 @@ func (h *IdentifyHandler) Handle(ctx *ws.Context) error {
 	}
 
 	ctx.Client.SetUsername(ev.Username)
+
+	BroadcastMessage(ctx, fmt.Sprintf("user joined %s", ctx.Client.GetUser().Username))
 	return nil
 }

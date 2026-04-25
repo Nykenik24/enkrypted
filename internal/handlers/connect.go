@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
@@ -36,6 +35,6 @@ func (ev *ConnectEvent) Kind() *event.EventKind {
 type ConnectHandler struct{}
 
 func (h *ConnectHandler) Handle(ctx *ws.Context) error {
-	BroadcastMessage(ctx, fmt.Sprintf("user joined %s", ctx.Client.GetUser().Username))
+	// could add some logic here later (such as handshaking?).
 	return nil
 }
