@@ -2,8 +2,11 @@ package auth
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
+	"log"
+	"strings"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -63,49 +66,57 @@ func (h *HashManager) HashPassword(password string) (string, error) {
 	return hashStr, nil
 }
 
-func slowStringCompare(a, b string) bool {
-	if len(a) != len(b) {
-		return false
-	}
+func (h *HashManager) CompareHashes(hashedPassword, storedHash string) bool {
+	return subtle.ConstantTimeCompare([]byte(hashedPassword), []byte(storedHash)) == 1
+}
 
-	result := byte(0)
-	for i := 0; i < len(a); i++ {
-		result |= a[i] ^ b[i]
-	}
-
-	return result == 0
+func (h *HashManager) IsHash(hash string) error {
+	_, err := fmt.Sscanf(
+		hash,
+		"$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
+	)
+	return err
 }
 
 func (h *HashManager) VerifyPassword(password, hashStr string) bool {
+	parts := strings.Split(hashStr, "$")
+	if len(parts) != 6 {
+		log.Printf("invalid hash format")
+		return false
+	}
+
+	// parts:
+	// [0] "" (empty)
+	// [1] "argon2id"
+	// [2] "v=<version>"
+	// [3] "m=<memory>,t=<time>,p=<threads>"
+	// [4] salt (base64)
+	// [5] hash (base64)
+
 	var version int
+	_, err := fmt.Sscanf(parts[2], "v=%d", &version)
+	if err != nil {
+		log.Printf("failed to parse version: %v", err)
+		return false
+	}
+
 	var memory, time uint32
 	var threads uint8
-	var saltStr, hashHexStr string
-
-	_, err := fmt.Sscanf(
-		hashStr,
-		"$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
-		&version,
-		&memory,
-		&time,
-		&threads,
-		&saltStr,
-		&hashHexStr,
-	)
+	_, err = fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &memory, &time, &threads)
 	if err != nil {
-		fmt.Printf("Failed to parse hash: %v\n", err)
+		log.Printf("failed to parse params: %v", err)
 		return false
 	}
 
-	salt, err := base64.RawStdEncoding.DecodeString(saltStr)
+	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
 	if err != nil {
-		fmt.Printf("Failed to decode salt: %v\n", err)
+		log.Printf("failed to decode salt: %v", err)
 		return false
 	}
 
-	storedHash, err := base64.RawStdEncoding.DecodeString(hashHexStr)
+	storedHash, err := base64.RawStdEncoding.DecodeString(parts[5])
 	if err != nil {
-		fmt.Printf("Failed to decode hash: %v\n", err)
+		log.Printf("failed to decode hash: %v", err)
 		return false
 	}
 
@@ -118,5 +129,5 @@ func (h *HashManager) VerifyPassword(password, hashStr string) bool {
 		uint32(len(storedHash)),
 	)
 
-	return slowStringCompare(string(computedHash), string(storedHash))
+	return subtle.ConstantTimeCompare(computedHash, storedHash) == 1
 }

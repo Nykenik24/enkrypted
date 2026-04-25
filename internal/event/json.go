@@ -9,11 +9,12 @@ import (
 type eventJSON struct {
 	Kind string         `json:"kind"`
 	Data map[string]any `json:"data"`
+	Auth *AuthInfo      `json:"auth,omitempty"`
 }
 
 func EventFromJSON(rawJSON []byte) (*Event, error) {
 	var evJSON eventJSON
-	log.Println("unmarshaling raw JSON into eventJSON")
+	log.Printf("unmarshaling raw JSON into eventJSON: %s", rawJSON)
 	if err := json.Unmarshal(rawJSON, &evJSON); err != nil {
 		return nil, err
 	}
@@ -24,10 +25,10 @@ func EventFromJSON(rawJSON []byte) (*Event, error) {
 		return nil, fmt.Errorf("KindFromString: %s", err)
 	}
 
-	log.Println("building event")
 	ev := &Event{
-		Data: (*EventData)(&evJSON.Data),
-		Kind: kind,
+		Data:     (*EventData)(&evJSON.Data),
+		Kind:     kind,
+		AuthInfo: evJSON.Auth,
 	}
 
 	return ev, nil

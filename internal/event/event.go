@@ -7,7 +7,7 @@ type Target struct {
 }
 
 type AuthInfo struct {
-	HashedPassword string `json:"password_hash,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 type Event struct {

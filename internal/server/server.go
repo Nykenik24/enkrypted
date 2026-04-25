@@ -7,16 +7,31 @@ import (
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
 
+type ServerConfig struct {
+	AdminPasswordHash string
+}
+
+func Config(adminPasswordHash string) *ServerConfig {
+	return &ServerConfig{
+		AdminPasswordHash: adminPasswordHash,
+	}
+}
+
 type Server struct {
 	Hub   *ws.Hub
 	Rooms map[uint64]*Room
-	Auth  *auth.AuthService
+	auth  *auth.AuthService
 }
 
-func NewServer() *Server {
+func NewServer(config *ServerConfig) *Server {
+	authService, err := auth.NewAuthService(config.AdminPasswordHash)
+	if err != nil {
+		panic(err)
+	}
+
 	s := &Server{
 		Rooms: make(map[uint64]*Room),
-		Auth:  auth.NewAuthService(),
+		auth:  authService,
 	}
 
 	h := ws.NewHub(s)
@@ -33,4 +48,8 @@ func (s *Server) GetRoom(id uint64) (ws.Room, error) {
 		return nil, fmt.Errorf("room %d not found", id)
 	}
 	return room, nil
+}
+
+func (s *Server) GetAuth() *auth.AuthService {
+	return s.auth
 }

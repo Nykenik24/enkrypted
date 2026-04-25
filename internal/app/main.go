@@ -13,6 +13,7 @@ import (
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
+var passwd = flag.String("password", "hunter2", "password")
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -38,7 +39,7 @@ var default_handlers = map[string]ws.EventHandler{
 func Start() {
 	flag.Parse()
 
-	srv := server.NewServer()
+	srv := server.NewServer(server.Config(*passwd))
 	hub := srv.Hub
 
 	hub.AddHandlers(default_handlers)
