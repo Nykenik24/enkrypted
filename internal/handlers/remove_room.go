@@ -36,13 +36,7 @@ func (h *RemoveRoomHandler) Handle(ctx *ws.Context) error {
 		return err
 	}
 
-	ctx.Broadcast(builtin_ev.Generic(
-		builtin_ev.NewMessageEvent(
-			"removed room",
-			time.Now().Format(time.RFC3339),
-			ctx.Client.GetUser(),
-		),
-	))
+	builtin_ev.BroadcastMessage(ctx, fmt.Sprintf("removed room %d", data.RoomID))
 
 	return nil
 }

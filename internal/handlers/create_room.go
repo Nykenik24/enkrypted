@@ -32,11 +32,7 @@ func (h *CreateRoomHandler) Handle(ctx *ws.Context) error {
 		return err
 	}
 
-	ctx.Broadcast(builtin_ev.Generic(builtin_ev.NewMessageEvent(
-		"created room",
-		time.Now().Format(time.RFC3339),
-		ctx.Client.GetUser(),
-	)))
+	builtin_ev.BroadcastMessage(ctx, "created room")
 
 	return nil
 }
