@@ -37,9 +37,20 @@
 <div
 	class="w-full bg-neutral-200 dark:bg-neutral-900 p-4 flex justify-between items-center"
 >
-	<a href="/"
-		><h2 class="text-xl font-bold hover:cursor-pointer">Enkrypted</h2></a
-	>
-	<a href="/login" class="btn preset-filled">Login</a>
+	<div>
+		<a href="/"
+			><h2 class="text-xl font-bold hover:cursor-pointer">
+				Enkrypted
+			</h2></a
+		>
+	</div>
+	{#if connected}
+		<p class="p-2 rounded-md preset-filled-success-400-600">
+			Connected to backend
+		</p>{:else}
+		<p class="p-2 rounded-md preset-filled-error-400-600">
+			Disconnected from backend
+		</p>{/if}
+	<div><a href="/login" class="btn preset-filled">Login</a></div>
 </div>
 {@render children()}
