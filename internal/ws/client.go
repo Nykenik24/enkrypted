@@ -11,7 +11,7 @@ import (
 )
 
 type EventHandler interface {
-	Handle(*Client, *event.EventData) error
+	Handle(*Context) error
 }
 
 type Client struct {
@@ -19,7 +19,7 @@ type Client struct {
 	conn   *websocket.Conn
 	send   chan []byte
 
-	handlers map[event.EventKind]EventHandler
+	handlers map[string]EventHandler
 	user     *user.User
 
 	midwareManager *middleware.MiddlewareManager
@@ -30,7 +30,7 @@ func NewClient(s *Hub, conn *websocket.Conn) *Client {
 		server:         s,
 		conn:           conn,
 		send:           make(chan []byte, 256),
-		handlers:       make(map[event.EventKind]EventHandler),
+		handlers:       make(map[string]EventHandler),
 		user:           user.NewUser(user.GenericUsername()),
 		midwareManager: middleware.NewMidwareManager(),
 	}
@@ -40,6 +40,8 @@ func (c *Client) Send(data []byte) {
 	select {
 	case c.send <- data:
 	default:
+		c.CloseSend()
+		c.conn.Close()
 	}
 }
 
@@ -64,7 +66,7 @@ func (c *Client) CloseSend() {
 	close(c.send)
 }
 
-func (c *Client) GetServer() *Hub {
+func (c *Client) GetHub() *Hub {
 	return c.server
 }
 
@@ -74,4 +76,9 @@ func (c *Client) SetUsername(username string) {
 
 func (c *Client) GetUser() *user.User {
 	return c.user
+}
+
+// This function gets the ID from the user, meaning it is the equivalent of "client.GetUser().ID".
+func (c *Client) GetID() uint64 {
+	return c.user.ID
 }

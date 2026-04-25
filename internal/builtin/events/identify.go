@@ -4,6 +4,8 @@ import (
 	"github.com/Nykenik24/enkrypted/internal/event"
 )
 
+var IdentifyEventKind = buildKind(RoomNamespace, "identify")
+
 type IdentifyEvent struct {
 	Username string `json:"username"`
 }
@@ -21,5 +23,5 @@ func (ev *IdentifyEvent) Data() *event.EventData {
 }
 
 func (ev *IdentifyEvent) Kind() *event.EventKind {
-	return event.NewEventKind(definee, "room", "identify")
+	return IdentifyEventKind
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/Nykenik24/enkrypted/internal/user"
 )
 
-var lastID uint64 = 0
+var MessageEventKind = buildKind(RoomNamespace, "message")
 
 type MessageEvent struct {
 	Contents  string     `json:"contents"`
@@ -15,12 +15,12 @@ type MessageEvent struct {
 }
 
 func NewMessageEvent(contents, timestamp string, user *user.User) *MessageEvent {
-	lastID++
+	lastMessageID++
 	return &MessageEvent{
 		Contents:  contents,
 		Timestamp: timestamp,
 		User:      user,
-		ID:        lastID,
+		ID:        lastMessageID,
 	}
 }
 
@@ -34,5 +34,5 @@ func (ev *MessageEvent) Data() *event.EventData {
 }
 
 func (ev *MessageEvent) Kind() *event.EventKind {
-	return event.NewEventKind(definee, "comm", "message")
+	return MessageEventKind
 }
