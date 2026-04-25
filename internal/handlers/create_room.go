@@ -2,11 +2,26 @@ package handlers
 
 import (
 	"fmt"
-	"time"
 
-	builtin_ev "github.com/Nykenik24/enkrypted/internal/builtin/events"
+	"github.com/Nykenik24/enkrypted/internal/event"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
+
+var CreateRoomEventKind = buildKind(RoomNamespace, "create")
+
+type CreateRoomEvent struct{}
+
+func NewCreateRoomEvent() *CreateRoomEvent {
+	return &CreateRoomEvent{}
+}
+
+func (ev *CreateRoomEvent) Data() *event.EventData {
+	return &event.EventData{}
+}
+
+func (ev *CreateRoomEvent) Kind() *event.EventKind {
+	return CreateRoomEventKind
+}
 
 type CreateRoomHandler struct{}
 
@@ -14,7 +29,7 @@ func (h *CreateRoomHandler) Handle(ctx *ws.Context) error {
 	ev := ctx.Event
 
 	if !ev.HasAuth() {
-		return fmt.Errorf("%s must have auth information", builtin_ev.CreateRoomEventKind.String())
+		return fmt.Errorf("%s must have auth information", CreateRoomEventKind.String())
 	}
 
 	passwd, err := ev.GetPassword()
@@ -33,11 +48,7 @@ func (h *CreateRoomHandler) Handle(ctx *ws.Context) error {
 		return err
 	}
 
-	ctx.Broadcast(builtin_ev.Generic(builtin_ev.NewMessageEvent(
-		"created room",
-		time.Now().Format(time.RFC3339),
-		ctx.Client.GetUser(),
-	)))
+	BroadcastMessage(ctx, "created room")
 
 	return nil
 }

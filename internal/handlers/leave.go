@@ -1,16 +1,34 @@
 package handlers
 
 import (
-	builtin_ev "github.com/Nykenik24/enkrypted/internal/builtin/events"
+	"github.com/Nykenik24/enkrypted/internal/event"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
+
+var LeaveRoomEventKind = buildKind(RoomNamespace, "leave")
+
+type LeaveRoomEvent struct {
+	RoomID uint64 `json:"roomId"`
+}
+
+func NewLeaveRoomEvent(roomId uint64) *LeaveRoomEvent {
+	return &LeaveRoomEvent{RoomID: roomId}
+}
+
+func (ev *LeaveRoomEvent) Data() *event.EventData {
+	return &event.EventData{"roomId": ev.RoomID}
+}
+
+func (ev *LeaveRoomEvent) Kind() *event.EventKind {
+	return LeaveRoomEventKind
+}
 
 type LeaveRoomHandler struct{}
 
 func (h *LeaveRoomHandler) Handle(ctx *ws.Context) error {
-	var ev builtin_ev.LeaveRoomEvent
+	var ev LeaveRoomEvent
 
-	if err := ctx.Bind(&ev); err != nil {
+	if err := ctx.BindData(&ev); err != nil {
 		return err
 	}
 

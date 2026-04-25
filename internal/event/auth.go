@@ -2,6 +2,10 @@ package event
 
 import "fmt"
 
+type AuthInfo struct {
+	Password string `json:"password,omitempty"`
+}
+
 func (e *Event) WithPassword(hash string) *Event {
 	e.AuthInfo = &AuthInfo{Password: hash}
 	return e

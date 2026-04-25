@@ -2,11 +2,28 @@ package handlers
 
 import (
 	"fmt"
-	"time"
 
-	builtin_ev "github.com/Nykenik24/enkrypted/internal/builtin/events"
+	"github.com/Nykenik24/enkrypted/internal/event"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
+
+var RemoveRoomEventKind = buildKind(RoomNamespace, "remove")
+
+type RemoveRoomEvent struct {
+	RoomID uint64 `json:"roomId"`
+}
+
+func NewRemoveRoomEvent(id uint64) *RemoveRoomEvent {
+	return &RemoveRoomEvent{RoomID: id}
+}
+
+func (ev *RemoveRoomEvent) Data() *event.EventData {
+	return &event.EventData{"roomId": ev.RoomID}
+}
+
+func (ev *RemoveRoomEvent) Kind() *event.EventKind {
+	return RemoveRoomEventKind
+}
 
 type RemoveRoomHandler struct{}
 
@@ -14,7 +31,7 @@ func (h *RemoveRoomHandler) Handle(ctx *ws.Context) error {
 	ev := ctx.Event
 
 	if !ev.HasAuth() {
-		return fmt.Errorf("%s must have auth information", builtin_ev.CreateRoomEventKind.String())
+		return fmt.Errorf("%s must have auth information", CreateRoomEventKind.String())
 	}
 
 	passwd, err := ev.GetPassword()
@@ -27,8 +44,8 @@ func (h *RemoveRoomHandler) Handle(ctx *ws.Context) error {
 		return fmt.Errorf("wrong password")
 	}
 
-	var data builtin_ev.RemoveRoomEvent
-	if err := ctx.Bind(&data); err != nil {
+	var data RemoveRoomEvent
+	if err := ctx.BindData(&data); err != nil {
 		return err
 	}
 
@@ -37,13 +54,7 @@ func (h *RemoveRoomHandler) Handle(ctx *ws.Context) error {
 		return err
 	}
 
-	ctx.Broadcast(builtin_ev.Generic(
-		builtin_ev.NewMessageEvent(
-			"removed room",
-			time.Now().Format(time.RFC3339),
-			ctx.Client.GetUser(),
-		),
-	))
+	BroadcastMessage(ctx, fmt.Sprintf("removed room %d", data.RoomID))
 
 	return nil
 }
