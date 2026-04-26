@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/gorilla/websocket"
 )
 
@@ -25,6 +26,10 @@ func (c *Client) ReadPump() {
 		if err != nil {
 			log.Println("bad event:", err)
 			continue
+		}
+
+		if ev.ID == nil {
+			ev.ID = id.RandomID()
 		}
 
 		log.Printf("event id=%s", ev.ID.String())
