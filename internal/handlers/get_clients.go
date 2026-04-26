@@ -31,17 +31,22 @@ type ClientData struct {
 }
 
 type GetClientsReply struct {
-	Clients []*ClientData `json:"status"`
+	Count   uint32        `json:"count"`
+	Clients []*ClientData `json:"clients"`
 }
 
 func NewGetClientsReply(clients []*ClientData) *GetClientsReply {
 	return &GetClientsReply{
+		Count:   uint32(len(clients)),
 		Clients: clients,
 	}
 }
 
 func (ev *GetClientsReply) Data() *event.EventData {
-	return &event.EventData{"clients": ev.Clients}
+	return &event.EventData{
+		"count":   ev.Count,
+		"clients": ev.Clients,
+	}
 }
 
 func (ev *GetClientsReply) Kind() *event.EventKind {
