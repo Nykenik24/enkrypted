@@ -39,16 +39,16 @@ func (r *Room) Broadcast(ev *event.Event) {
 
 func (s *Server) AddRoom() (ws.Room, error) {
 	room := NewRoom(s)
-	s.Rooms[room.ID] = room
+	s.Rooms[room.ID.String()] = room
 
 	return room, nil
 }
 
 func (s *Server) RemoveRoom(id *id.ID) error {
-	if s.Rooms[id] == nil {
-		return fmt.Errorf("room %d doesn't exist", id)
+	if s.Rooms[id.String()] == nil {
+		return fmt.Errorf("room %s doesn't exist", id)
 	}
 
-	delete(s.Rooms, id)
+	delete(s.Rooms, id.String())
 	return nil
 }
