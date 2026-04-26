@@ -9,23 +9,7 @@ import (
 
 var CreateRoomEventKind = buildKind(RoomNamespace, "create")
 
-type CreateRoomEvent struct{}
-
-func NewCreateRoomEvent() *CreateRoomEvent {
-	return &CreateRoomEvent{}
-}
-
-func (ev *CreateRoomEvent) Data() *event.EventData {
-	return &event.EventData{}
-}
-
-func (ev *CreateRoomEvent) Kind() *event.EventKind {
-	return CreateRoomEventKind
-}
-
-type CreateRoomHandler struct{}
-
-func (h *CreateRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
+var CreateRoomHandler = BuildHandler(CreateRoomEventKind, func(ctx *ws.Context) (*event.Event, error) {
 	ev := ctx.Event
 
 	if !ev.HasAuth() {
@@ -48,4 +32,4 @@ func (h *CreateRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 	BroadcastMessage(ctx, "created room")
 
 	return nil, nil
-}
+})

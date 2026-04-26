@@ -17,14 +17,6 @@ func NewGetClientsEvent() *GetClientsEvent {
 	return &GetClientsEvent{}
 }
 
-func (ev *GetClientsEvent) Data() *event.EventData {
-	return &event.EventData{}
-}
-
-func (ev *GetClientsEvent) Kind() *event.EventKind {
-	return GetClientsEventKind
-}
-
 type ClientData struct {
 	ID       *id.ID `json:"id"`
 	Username string `json:"username"`
@@ -40,22 +32,19 @@ func NewGetClientsReply(clients []*ClientData) *GetClientsReply {
 	}
 }
 
-func (ev *GetClientsReply) Data() *event.EventData {
-	return &event.EventData{"clients": ev.Clients}
-}
-
-func (ev *GetClientsReply) Kind() *event.EventKind {
-	return GetClientsReplyKind
-}
-
-type GetClientsHandler struct{}
-
-func (h *GetClientsHandler) Handle(ctx *ws.Context) (*event.Event, error) {
+var GetClientsHandler = BuildHandler(GetClientsEventKind, func(ctx *ws.Context) (*event.Event, error) {
 	var clients []*ClientData
 
 	for _, client := range ctx.Hub.GetAllClients() {
 		clients = append(clients, &ClientData{ID: client.GetID(), Username: client.GetUser().Username})
 	}
 
-	return Base(NewGetClientsReply(clients)), nil
-}
+	replyData := NewGetClientsReply(clients)
+
+	reply := &event.Event{
+		Kind: GetClientsEventKind,
+		Data: ToEventData(replyData),
+	}
+
+	return reply, nil
+})

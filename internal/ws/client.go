@@ -13,6 +13,7 @@ import (
 
 type EventHandler interface {
 	Handle(*Context) (*event.Event, error)
+	Kind() *event.EventKind
 }
 
 type Client struct {

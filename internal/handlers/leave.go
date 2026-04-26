@@ -16,17 +16,7 @@ func NewLeaveRoomEvent(roomId *id.ID) *LeaveRoomEvent {
 	return &LeaveRoomEvent{RoomID: roomId}
 }
 
-func (ev *LeaveRoomEvent) Data() *event.EventData {
-	return &event.EventData{"roomId": ev.RoomID}
-}
-
-func (ev *LeaveRoomEvent) Kind() *event.EventKind {
-	return LeaveRoomEventKind
-}
-
-type LeaveRoomHandler struct{}
-
-func (h *LeaveRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
+var LeaveRoomHandler = BuildHandler(LeaveRoomEventKind, func(ctx *ws.Context) (*event.Event, error) {
 	var ev LeaveRoomEvent
 
 	if err := ctx.BindData(&ev); err != nil {
@@ -41,4 +31,4 @@ func (h *LeaveRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 	room.Leave(ctx.Client)
 
 	return nil, nil
-}
+})

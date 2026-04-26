@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
-	"github.com/Nykenik24/enkrypted/internal/id"
+	"github.com/Nykenik24/enkrypted/internal/ws"
 )
 
 const definee = "enkr"
@@ -26,15 +26,4 @@ func buildKind(ns Namespace, name string) *event.EventKind {
 	return kind
 }
 
-type BuiltinEvent interface {
-	Data() *event.EventData
-	Kind() *event.EventKind
-}
-
-func Base(ev BuiltinEvent) *event.Event {
-	return &event.Event{
-		Kind: ev.Kind(),
-		Data: ev.Data(),
-		ID:   id.RandomID(),
-	}
-}
+type HandleFunc func(*ws.Context) (*event.Event, error)

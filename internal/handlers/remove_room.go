@@ -18,17 +18,7 @@ func NewRemoveRoomEvent(id *id.ID) *RemoveRoomEvent {
 	return &RemoveRoomEvent{RoomID: id}
 }
 
-func (ev *RemoveRoomEvent) Data() *event.EventData {
-	return &event.EventData{"roomId": ev.RoomID}
-}
-
-func (ev *RemoveRoomEvent) Kind() *event.EventKind {
-	return RemoveRoomEventKind
-}
-
-type RemoveRoomHandler struct{}
-
-func (h *RemoveRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
+var RemoveRoomHandler = BuildHandler(RemoveRoomEventKind, func(ctx *ws.Context) (*event.Event, error) {
 	ev := ctx.Event
 
 	if !ev.HasAuth() {
@@ -55,4 +45,4 @@ func (h *RemoveRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 	BroadcastMessage(ctx, fmt.Sprintf("removed room %d", data.RoomID))
 
 	return nil, nil
-}
+})

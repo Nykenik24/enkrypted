@@ -23,16 +23,6 @@ func NewIdentifyEvent(username string) *IdentifyEvent {
 	}
 }
 
-func (ev *IdentifyEvent) Data() *event.EventData {
-	return &event.EventData{
-		"username": ev.Username,
-	}
-}
-
-func (ev *IdentifyEvent) Kind() *event.EventKind {
-	return IdentifyEventKind
-}
-
 type IdentifyAcknowledge struct {
 	Status int `json:"status"`
 }
@@ -43,29 +33,30 @@ func NewIdentifyAck(status int) *IdentifyAcknowledge {
 	}
 }
 
-func (ev *IdentifyAcknowledge) Data() *event.EventData {
-	return &event.EventData{"status": ev.Status}
-}
+var IdentifyHandler = BuildHandler(IdentifyEventKind, func(ctx *ws.Context) (*event.Event, error) {
+	var data IdentifyEvent
 
-func (ev *IdentifyAcknowledge) Kind() *event.EventKind {
-	return IdentifyAckKind
-}
-
-type IdentifyHandler struct{}
-
-func (h *IdentifyHandler) Handle(ctx *ws.Context) (*event.Event, error) {
-	var ev IdentifyEvent
-
-	if err := ctx.BindData(&ev); err != nil {
+	if err := ctx.BindData(&data); err != nil {
 		return nil, err
 	}
 
-	if ev.Username == "" {
-		ev.Username = user.GenericUsername()
+	if data.Username == "" {
+		data.Username = user.GenericUsername()
 	}
 
-	ctx.Client.SetUsername(ev.Username)
+	ctx.Client.SetUsername(data.Username)
 
 	BroadcastMessage(ctx, fmt.Sprintf("user joined %s", ctx.Client.GetUser().Username))
-	return Base(NewIdentifyAck(0)).RepliesTo(ctx.Event.ID), nil
-}
+
+	reply := &event.Event{
+		Kind: IdentifyAckKind,
+		Data: ToEventData(data),
+	}
+	reply.RepliesTo(ctx.Event.ID)
+
+	return reply, nil
+})
+
+// func (h *IdentifyHandler) Handle(ctx *ws.Context) (*event.Event, error) {
+
+// }
