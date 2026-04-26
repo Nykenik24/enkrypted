@@ -4,16 +4,17 @@ import (
 	"fmt"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
 
 var RemoveRoomEventKind = buildKind(RoomNamespace, "remove")
 
 type RemoveRoomEvent struct {
-	RoomID uint64 `json:"roomId"`
+	RoomID *id.ID `json:"roomId"`
 }
 
-func NewRemoveRoomEvent(id uint64) *RemoveRoomEvent {
+func NewRemoveRoomEvent(id *id.ID) *RemoveRoomEvent {
 	return &RemoveRoomEvent{RoomID: id}
 }
 

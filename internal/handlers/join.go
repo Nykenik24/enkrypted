@@ -2,16 +2,17 @@ package handlers
 
 import (
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
 
 var JoinRoomEventKind = buildKind(RoomNamespace, "join")
 
 type JoinRoomEvent struct {
-	RoomID uint64 `json:"roomId"`
+	RoomID *id.ID `json:"roomId"`
 }
 
-func NewJoinRoomEvent(roomId uint64) *JoinRoomEvent {
+func NewJoinRoomEvent(roomId *id.ID) *JoinRoomEvent {
 	return &JoinRoomEvent{RoomID: roomId}
 }
 

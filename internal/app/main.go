@@ -30,14 +30,16 @@ type App struct {
 var default_handlers = map[string]ws.EventHandler{
 	handlers.MessageEventKind.String(): &handlers.MessageHandler{},
 
-	handlers.IdentifyEventKind.String(): &handlers.IdentifyHandler{},
-	handlers.ConnectEventKind.String():  &handlers.ConnectHandler{},
+	handlers.IdentifyEventKind.String():   &handlers.IdentifyHandler{},
+	handlers.ConnectEventKind.String():    &handlers.ConnectHandler{},
+	handlers.GetClientsEventKind.String(): &handlers.GetClientsHandler{},
 
 	handlers.JoinRoomEventKind.String():  &handlers.JoinRoomHandler{},
 	handlers.LeaveRoomEventKind.String(): &handlers.LeaveRoomHandler{},
 
 	handlers.CreateRoomEventKind.String(): &handlers.CreateRoomHandler{},
 	handlers.RemoveRoomEventKind.String(): &handlers.RemoveRoomHandler{},
+	handlers.GetRoomsEventKind.String():   &handlers.GetRoomsHandler{},
 }
 
 func NewApp() *App {

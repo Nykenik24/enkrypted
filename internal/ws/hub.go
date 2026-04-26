@@ -6,11 +6,12 @@ import (
 	"maps"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/middleware"
 )
 
 type Hub struct {
-	clients map[uint64]*Client
+	clients map[*id.ID]*Client
 
 	register   chan *Client
 	unregister chan *Client
@@ -36,7 +37,7 @@ func NewHub(server Server) *Hub {
 		unregister:     make(chan *Client),
 		process:        make(chan *Envelope, 256),
 		broadcast:      make(chan *event.Event, 256),
-		clients:        make(map[uint64]*Client),
+		clients:        make(map[*id.ID]*Client),
 		handlers:       make(map[string]EventHandler),
 		midwareManager: middleware.NewMidwareManager(),
 		server:         server,
@@ -64,14 +65,14 @@ func (h *Hub) dispatch(ev *event.Event) {
 	}
 
 	if ev.Target.UserID != nil {
-		if c, ok := h.clients[*ev.Target.UserID]; ok {
+		if c, ok := h.clients[ev.Target.UserID]; ok {
 			_ = c.SendEvent(ev)
 		}
 		return
 	}
 
 	if ev.Target.RoomID != nil {
-		room, err := h.server.GetRoom(*ev.Target.RoomID)
+		room, err := h.server.GetRoom(ev.Target.RoomID)
 		if err != nil {
 			log.Println(err)
 			return
@@ -178,7 +179,7 @@ func (h *Hub) BroadcastEvent(ev *event.Event) error {
 	return nil
 }
 
-func (h *Hub) SendToClient(ev *event.Event, id uint64) error {
+func (h *Hub) SendToClient(ev *event.Event, id *id.ID) error {
 	if _, exists := h.clients[id]; !exists {
 		return fmt.Errorf("client %d not registered in hub", id)
 	}
@@ -187,7 +188,11 @@ func (h *Hub) SendToClient(ev *event.Event, id uint64) error {
 	return nil
 }
 
-func (h *Hub) GetClient(id uint64) (*Client, error) {
+func (h *Hub) GetAllClients() map[*id.ID]*Client {
+	return h.clients
+}
+
+func (h *Hub) GetClient(id *id.ID) (*Client, error) {
 	if _, exists := h.clients[id]; !exists {
 		return nil, fmt.Errorf("tried to get user %d, but it's not in the hub", id)
 	}

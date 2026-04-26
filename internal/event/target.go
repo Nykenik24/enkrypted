@@ -1,18 +1,20 @@
 package event
 
+import "github.com/Nykenik24/enkrypted/internal/id"
+
 type Target struct {
-	RoomID    *uint64 `json:"roomId,omitempty"`
-	UserID    *uint64 `json:"userId,omitempty"`
-	Broadcast bool    `json:"broadcast,omitempty"`
+	RoomID    *id.ID `json:"roomId,omitempty"`
+	UserID    *id.ID `json:"userId,omitempty"`
+	Broadcast bool   `json:"broadcast,omitempty"`
 }
 
-func (e *Event) ToRoom(id uint64) *Event {
-	e.Target = &Target{RoomID: &id}
+func (e *Event) ToRoom(id *id.ID) *Event {
+	e.Target = &Target{RoomID: id}
 	return e
 }
 
-func (e *Event) ToUser(id uint64) *Event {
-	e.Target = &Target{UserID: &id}
+func (e *Event) ToUser(id *id.ID) *Event {
+	e.Target = &Target{UserID: id}
 	return e
 }
 

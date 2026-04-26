@@ -4,10 +4,9 @@ import (
 	"fmt"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
-
-var lastRoomID uint64 = 0
 
 type Status int
 
@@ -17,19 +16,18 @@ const (
 )
 
 type Room struct {
-	ID   uint64
-	Host *Server
+	ID   *id.ID  `json:"id"`
+	Host *Server `json:"-"`
 
-	members map[uint64]*ws.Client
+	members map[*id.ID]*ws.Client
 }
 
 func NewRoom(host *Server) *Room {
-	lastRoomID++
 	return &Room{
 		Host: host,
-		ID:   lastRoomID,
+		ID:   id.RandomID(),
 
-		members: make(map[uint64]*ws.Client),
+		members: make(map[*id.ID]*ws.Client),
 	}
 }
 
@@ -46,7 +44,7 @@ func (s *Server) AddRoom() (ws.Room, error) {
 	return room, nil
 }
 
-func (s *Server) RemoveRoom(id uint64) error {
+func (s *Server) RemoveRoom(id *id.ID) error {
 	if s.Rooms[id] == nil {
 		return fmt.Errorf("room %d doesn't exist", id)
 	}
