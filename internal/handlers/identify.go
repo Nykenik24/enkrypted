@@ -25,22 +25,17 @@ func NewIdentifyEvent(username string) *IdentifyEvent {
 }
 
 type IdentifyAcknowledge struct {
-	Status   int     `json:"status"`
-	Username string  `json:"username"`
-	Reason   *string `json:"reason,omitempty"`
+	Status   int    `json:"status"`
+	Username string `json:"username"`
+	Reason   string `json:"reason,omitempty"`
 }
 
-func NewIdentifyAck(status int, username string) *IdentifyAcknowledge {
+func NewIdentifyAck(status int, username string, reason string) *IdentifyAcknowledge {
 	return &IdentifyAcknowledge{
 		Status:   status,
 		Username: username,
-		Reason:   nil,
+		Reason:   reason,
 	}
-}
-
-func (ack *IdentifyAcknowledge) SetReason(reason string) *IdentifyAcknowledge {
-	ack.Reason = &reason
-	return ack
 }
 
 const username_max_len = 32
@@ -61,6 +56,7 @@ func validUsername(username string) error {
 
 var IdentifyHandler = BuildHandler(IdentifyEventKind, func(ctx *ws.Context) (*event.Event, error) {
 	var data IdentifyEvent
+	var err error
 
 	if err := ctx.BindData(&data); err != nil {
 		return nil, err
@@ -73,10 +69,10 @@ var IdentifyHandler = BuildHandler(IdentifyEventKind, func(ctx *ws.Context) (*ev
 	}
 
 	var status int = 0
-	var err error = nil
+	var reason string = "ok"
 
-	if valid := validUsername(username); valid != nil {
-		err = valid
+	if err = validUsername(username); err != nil {
+		reason = err.Error()
 		status = 1
 	} else {
 		for _, client := range ctx.Hub.GetAllClients() {
@@ -93,10 +89,7 @@ var IdentifyHandler = BuildHandler(IdentifyEventKind, func(ctx *ws.Context) (*ev
 		BroadcastMessage(ctx, fmt.Sprintf("user joined %s", ctx.Client.GetUser().Username))
 	}
 
-	replyData := NewIdentifyAck(status, username)
-	if status == 1 {
-		replyData.SetReason(err.Error())
-	}
+	replyData := NewIdentifyAck(status, username, reason)
 
 	reply := &event.Event{
 		Kind: IdentifyAckKind,
