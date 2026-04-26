@@ -42,7 +42,7 @@ var GetClientsHandler = BuildHandler(GetClientsEventKind, func(ctx *ws.Context) 
 	replyData := NewGetClientsReply(clients)
 
 	reply := &event.Event{
-		Kind: GetClientsEventKind,
+		Kind: GetClientsReplyKind,
 		Data: ToEventData(replyData),
 	}
 

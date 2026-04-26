@@ -36,7 +36,7 @@ var GetRoomsHandler = BuildHandler(GetRoomsEventKind, func(ctx *ws.Context) (*ev
 	replyData := NewGetRoomsReply(rooms)
 
 	reply := &event.Event{
-		Kind: GetRoomsEventKind,
+		Kind: GetRoomsReplyKind,
 		Data: ToEventData(replyData),
 	}
 
