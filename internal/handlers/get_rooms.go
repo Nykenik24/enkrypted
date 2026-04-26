@@ -25,17 +25,22 @@ func (ev *GetRoomsEvent) Kind() *event.EventKind {
 }
 
 type GetRoomsReply struct {
-	Rooms []ws.Room `json:"status"`
+	Count uint32    `json:"count"`
+	Rooms []ws.Room `json:"rooms"`
 }
 
 func NewGetRoomsReply(rooms []ws.Room) *GetRoomsReply {
 	return &GetRoomsReply{
+		Count: uint32(len(rooms)),
 		Rooms: rooms,
 	}
 }
 
 func (ev *GetRoomsReply) Data() *event.EventData {
-	return &event.EventData{"rooms": ev.Rooms}
+	return &event.EventData{
+		"count": ev.Count,
+		"rooms": ev.Rooms,
+	}
 }
 
 func (ev *GetRoomsReply) Kind() *event.EventKind {
