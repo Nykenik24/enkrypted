@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/big"
 )
 
@@ -13,18 +12,14 @@ type ID []byte
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 const id_len = 32
 
-func FromBytes(str []byte) (*ID, error) {
-	if len(str) != id_len {
-		return nil, fmt.Errorf("ID string is not %d characters long", id_len)
-	}
-
+func fromBytes(str []byte) *ID {
 	id := make(ID, id_len)
 	copy(id, str)
-	return &id, nil
+	return &id
 }
 
-func FromString(str string) (*ID, error) {
-	return FromBytes([]byte(str))
+func FromString(str string) *ID {
+	return fromBytes([]byte(str))
 }
 
 func RandomID() *ID {
@@ -36,7 +31,7 @@ func RandomID() *ID {
 		result[i] = charset[num.Int64()]
 	}
 
-	i, _ := FromBytes(result)
+	i := fromBytes(result)
 	return i
 }
 
@@ -44,7 +39,7 @@ func (i *ID) String() string {
 	if i == nil {
 		return ""
 	}
-	return (string)(*i)
+	return string(*i)
 }
 
 func (i ID) MarshalJSON() ([]byte, error) {
