@@ -10,7 +10,7 @@ import (
 
 type eventJSON struct {
 	Kind string         `json:"kind"`
-	ID   *id.ID         `json:"id"`
+	ID   *id.ID         `json:"id,omitempty"`
 	Data map[string]any `json:"data"`
 	Auth *AuthInfo      `json:"auth,omitempty"`
 }
