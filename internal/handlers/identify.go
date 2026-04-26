@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
 	"github.com/Nykenik24/enkrypted/internal/user"
@@ -23,49 +24,89 @@ func NewIdentifyEvent(username string) *IdentifyEvent {
 	}
 }
 
-func (ev *IdentifyEvent) Data() *event.EventData {
-	return &event.EventData{
-		"username": ev.Username,
-	}
-}
-
-func (ev *IdentifyEvent) Kind() *event.EventKind {
-	return IdentifyEventKind
-}
-
 type IdentifyAcknowledge struct {
-	Status int `json:"status"`
+	Status   int     `json:"status"`
+	Username string  `json:"username"`
+	Reason   *string `json:"reason,omitempty"`
 }
 
-func NewIdentifyAck(status int) *IdentifyAcknowledge {
+func NewIdentifyAck(status int, username string) *IdentifyAcknowledge {
 	return &IdentifyAcknowledge{
-		Status: status,
+		Status:   status,
+		Username: username,
+		Reason:   nil,
 	}
 }
 
-func (ev *IdentifyAcknowledge) Data() *event.EventData {
-	return &event.EventData{"status": ev.Status}
+func (ack *IdentifyAcknowledge) SetReason(reason string) *IdentifyAcknowledge {
+	ack.Reason = &reason
+	return ack
 }
 
-func (ev *IdentifyAcknowledge) Kind() *event.EventKind {
-	return IdentifyAckKind
+const username_max_len = 32
+
+var usernameRegex = regexp.MustCompile(`^[\w\d]+$`)
+
+func validUsername(username string) error {
+	if len(username) > username_max_len {
+		return fmt.Errorf("username longer than %d characters", username_max_len)
+	}
+
+	if !usernameRegex.Match([]byte(username)) {
+		return fmt.Errorf("invalid format")
+	}
+
+	return nil
 }
 
-type IdentifyHandler struct{}
+var IdentifyHandler = BuildHandler(IdentifyEventKind, func(ctx *ws.Context) (*event.Event, error) {
+	var data IdentifyEvent
 
-func (h *IdentifyHandler) Handle(ctx *ws.Context) (*event.Event, error) {
-	var ev IdentifyEvent
-
-	if err := ctx.BindData(&ev); err != nil {
+	if err := ctx.BindData(&data); err != nil {
 		return nil, err
 	}
 
-	if ev.Username == "" {
-		ev.Username = user.GenericUsername()
+	username := data.Username
+
+	if username == "" {
+		username = user.GenericUsername()
 	}
 
-	ctx.Client.SetUsername(ev.Username)
+	var status int = 0
+	var err error = nil
 
-	BroadcastMessage(ctx, fmt.Sprintf("user joined %s", ctx.Client.GetUser().Username))
-	return Base(NewIdentifyAck(0)).RepliesTo(ctx.Event.ID), nil
-}
+	if valid := validUsername(username); valid != nil {
+		err = valid
+		status = 1
+	} else {
+		for _, client := range ctx.Hub.GetAllClients() {
+			if username == client.GetUser().Username {
+				err = fmt.Errorf("username taken")
+				status = 1
+				break
+			}
+		}
+	}
+
+	if status == 0 {
+		ctx.Client.SetUsername(username)
+		BroadcastMessage(ctx, fmt.Sprintf("user joined %s", ctx.Client.GetUser().Username))
+	}
+
+	replyData := NewIdentifyAck(status, username)
+	if status == 1 {
+		replyData.SetReason(err.Error())
+	}
+
+	reply := &event.Event{
+		Kind: IdentifyAckKind,
+		Data: ToEventData(replyData),
+	}
+	reply.RepliesTo(ctx.Event.ID)
+
+	return reply, err
+})
+
+// func (h *IdentifyHandler) Handle(ctx *ws.Context) (*event.Event, error) {
+
+// }

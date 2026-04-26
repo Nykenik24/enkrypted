@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"time"
-
 	"github.com/Nykenik24/enkrypted/internal/event"
 	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/user"
@@ -28,37 +26,20 @@ func NewMessageEvent(contents, timestamp string, user *user.User) *MessageEvent 
 	}
 }
 
-func (ev *MessageEvent) Data() *event.EventData {
-	return &event.EventData{
-		"contents":  ev.Contents,
-		"timestamp": ev.Timestamp,
-		"user":      ev.User,
-		"id":        ev.ID,
-	}
-}
-
-func (ev *MessageEvent) Kind() *event.EventKind {
-	return MessageEventKind
-}
-
-type MessageHandler struct{}
-
-func (h *MessageHandler) Handle(ctx *ws.Context) (*event.Event, error) {
+var MessageHandler = BuildHandler(MessageEventKind, func(ctx *ws.Context) (*event.Event, error) {
 	var data MessageEvent
 
 	if err := ctx.BindData(&data); err != nil {
 		return nil, err
 	}
 
-	ev := NewMessageEvent(
-		data.Contents,
-		time.Now().Format(time.RFC3339),
-		ctx.Client.GetUser(),
-	)
-
+	ev := &event.Event{
+		Kind: MessageEventKind,
+		Data: ToEventData(data),
+	}
 	ctx.Broadcast(
-		Base(ev).ToRoom(data.RoomID),
+		ev.ToRoom(data.RoomID),
 	)
 
 	return nil, nil
-}
+})

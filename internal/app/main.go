@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Nykenik24/enkrypted/internal/event"
 	"github.com/Nykenik24/enkrypted/internal/handlers"
+	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/server"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
@@ -28,18 +30,18 @@ type App struct {
 }
 
 var default_handlers = map[string]ws.EventHandler{
-	handlers.MessageEventKind.String(): &handlers.MessageHandler{},
+	handlers.MessageEventKind.String(): handlers.MessageHandler,
 
-	handlers.IdentifyEventKind.String():   &handlers.IdentifyHandler{},
-	handlers.ConnectEventKind.String():    &handlers.ConnectHandler{},
-	handlers.GetClientsEventKind.String(): &handlers.GetClientsHandler{},
+	handlers.IdentifyEventKind.String():   handlers.IdentifyHandler,
+	handlers.ConnectEventKind.String():    handlers.ConnectHandler,
+	handlers.GetClientsEventKind.String(): handlers.GetClientsHandler,
 
-	handlers.JoinRoomEventKind.String():  &handlers.JoinRoomHandler{},
-	handlers.LeaveRoomEventKind.String(): &handlers.LeaveRoomHandler{},
+	handlers.JoinRoomEventKind.String():  handlers.JoinRoomHandler,
+	handlers.LeaveRoomEventKind.String(): handlers.LeaveRoomHandler,
 
-	handlers.CreateRoomEventKind.String(): &handlers.CreateRoomHandler{},
-	handlers.RemoveRoomEventKind.String(): &handlers.RemoveRoomHandler{},
-	handlers.GetRoomsEventKind.String():   &handlers.GetRoomsHandler{},
+	handlers.CreateRoomEventKind.String(): handlers.CreateRoomHandler,
+	handlers.RemoveRoomEventKind.String(): handlers.RemoveRoomHandler,
+	handlers.GetRoomsEventKind.String():   handlers.GetRoomsHandler,
 }
 
 func NewApp() *App {
@@ -61,9 +63,19 @@ func (app *App) ServeHTTP() {
 			return
 		}
 
-		connect := handlers.NewConnectEvent(c.GetID())
+		// TODO: make a helper for emitting this connect event (or something similar)
 
-		hub.Emit(c, handlers.Base(connect))
+		connectData := &handlers.ConnectEvent{
+			ID: c.GetID(),
+		}
+
+		connect := &event.Event{
+			Kind: handlers.ConnectEventKind,
+			Data: handlers.ToEventData(connectData),
+			ID:   id.RandomID(),
+		}
+
+		hub.Emit(c, connect)
 	})
 
 	httpServer := &http.Server{

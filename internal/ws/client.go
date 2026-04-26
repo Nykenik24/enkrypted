@@ -13,6 +13,7 @@ import (
 
 type EventHandler interface {
 	Handle(*Context) (*event.Event, error)
+	Kind() *event.EventKind
 }
 
 type Client struct {
@@ -41,8 +42,7 @@ func (c *Client) Send(data []byte) {
 	select {
 	case c.send <- data:
 	default:
-		c.CloseSend()
-		c.conn.Close()
+		c.Disconnect()
 	}
 }
 
@@ -61,6 +61,12 @@ func (c *Client) SendEvent(ev *event.Event) error {
 	log.Printf("sending event: %s", rawJSON)
 	c.Send(rawJSON)
 	return nil
+}
+
+func (c *Client) Disconnect() {
+	c.conn.Close()
+	c.CloseSend()
+	c.GetHub().Unregister(c)
 }
 
 func (c *Client) CloseSend() {
