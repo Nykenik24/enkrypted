@@ -23,11 +23,13 @@ type ClientData struct {
 }
 
 type GetClientsReply struct {
-	Clients []*ClientData `json:"status"`
+	Count   uint32        `json:"count"`
+	Clients []*ClientData `json:"clients"`
 }
 
 func NewGetClientsReply(clients []*ClientData) *GetClientsReply {
 	return &GetClientsReply{
+		Count:   uint32(len(clients)),
 		Clients: clients,
 	}
 }
