@@ -1,7 +1,5 @@
 package event
 
-import "fmt"
-
 type AuthInfo struct {
 	Password string `json:"password,omitempty"`
 }
@@ -15,10 +13,6 @@ func (e *Event) HasAuth() bool {
 	return e.AuthInfo != nil
 }
 
-func (e *Event) GetPassword() (string, error) {
-	if !e.HasAuth() {
-		return "", fmt.Errorf("event has no auth information")
-	}
-
-	return e.AuthInfo.Password, nil
+func (e *Event) GetPassword() string {
+	return e.AuthInfo.Password
 }

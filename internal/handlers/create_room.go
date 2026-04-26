@@ -32,10 +32,7 @@ func (h *CreateRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 		return nil, fmt.Errorf("%s must have auth information", CreateRoomEventKind.String())
 	}
 
-	passwd, err := ev.GetPassword()
-	if err != nil {
-		return nil, err
-	}
+	passwd := ev.GetPassword()
 
 	auth := ctx.Server.GetAuth()
 
@@ -43,7 +40,7 @@ func (h *CreateRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 		return nil, fmt.Errorf("wrong password")
 	}
 
-	_, err = ctx.Server.AddRoom()
+	_, err := ctx.Server.AddRoom()
 	if err != nil {
 		return nil, err
 	}
