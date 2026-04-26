@@ -47,12 +47,16 @@ const username_max_len = 32
 
 var usernameRegex = regexp.MustCompile(`^[\w\d]+$`)
 
-func validUsername(username string) bool {
+func validUsername(username string) error {
 	if len(username) > username_max_len {
-		return false
+		return fmt.Errorf("username longer than %d characters", username_max_len)
 	}
 
-	return usernameRegex.Match([]byte(username))
+	if !usernameRegex.Match([]byte(username)) {
+		return fmt.Errorf("invalid format")
+	}
+
+	return nil
 }
 
 var IdentifyHandler = BuildHandler(IdentifyEventKind, func(ctx *ws.Context) (*event.Event, error) {
@@ -69,22 +73,19 @@ var IdentifyHandler = BuildHandler(IdentifyEventKind, func(ctx *ws.Context) (*ev
 	}
 
 	var status int = 0
-	var reason string = ""
 	var err error = nil
 
-	if validUsername(username) {
+	if valid := validUsername(username); valid != nil {
+		err = valid
+		status = 1
+	} else {
 		for _, client := range ctx.Hub.GetAllClients() {
 			if username == client.GetUser().Username {
-				err = fmt.Errorf("username taken: %s", username)
+				err = fmt.Errorf("username taken")
 				status = 1
-				reason = "username taken"
 				break
 			}
 		}
-	} else {
-		err = fmt.Errorf("invalid username: %s", username)
-		status = 1
-		reason = "invalid username"
 	}
 
 	if status == 0 {
@@ -94,7 +95,7 @@ var IdentifyHandler = BuildHandler(IdentifyEventKind, func(ctx *ws.Context) (*ev
 
 	replyData := NewIdentifyAck(status, username)
 	if status == 1 {
-		replyData.SetReason(reason)
+		replyData.SetReason(err.Error())
 	}
 
 	reply := &event.Event{
