@@ -188,7 +188,11 @@ func (h *Hub) SendToClient(ev *event.Event, id *id.ID) error {
 	return nil
 }
 
-func (h *Hub) GetClient(id uint64) (*Client, error) {
+func (h *Hub) GetAllClients() map[*id.ID]*Client {
+	return h.clients
+}
+
+func (h *Hub) GetClient(id *id.ID) (*Client, error) {
 	if _, exists := h.clients[id]; !exists {
 		return nil, fmt.Errorf("tried to get user %d, but it's not in the hub", id)
 	}

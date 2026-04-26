@@ -43,7 +43,17 @@ func NewServer(config *ServerConfig) *Server {
 	return s
 }
 
-func (s *Server) GetRoom(id uint64) (ws.Room, error) {
+func (s *Server) GetAllRooms() map[*id.ID]ws.Room {
+	rooms := make(map[*id.ID]ws.Room)
+
+	for k, v := range s.Rooms {
+		rooms[k] = v
+	}
+
+	return rooms
+}
+
+func (s *Server) GetRoom(id *id.ID) (ws.Room, error) {
 	room, ok := s.Rooms[id]
 	if !ok {
 		return nil, fmt.Errorf("room %d not found", id)
