@@ -35,10 +35,7 @@ func (h *RemoveRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 		return nil, fmt.Errorf("%s must have auth information", CreateRoomEventKind.String())
 	}
 
-	passwd, err := ev.GetPassword()
-	if err != nil {
-		return nil, err
-	}
+	passwd := ev.GetPassword()
 
 	auth := ctx.Server.GetAuth()
 	if !auth.Hasher.VerifyPassword(passwd, auth.GetAdminHash()) {
@@ -50,7 +47,7 @@ func (h *RemoveRoomHandler) Handle(ctx *ws.Context) (*event.Event, error) {
 		return nil, err
 	}
 
-	err = ctx.Server.RemoveRoom(data.RoomID)
+	err := ctx.Server.RemoveRoom(data.RoomID)
 	if err != nil {
 		return nil, err
 	}
