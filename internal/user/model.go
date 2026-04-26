@@ -4,20 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-)
 
-var lastID uint64 = 0
+	"github.com/Nykenik24/enkrypted/internal/id"
+)
 
 type User struct {
 	Username string `json:"username"`
-	ID       uint64 `json:"id"`
+	ID       *id.ID `json:"id"`
 }
 
 func NewUser(username string) *User {
-	lastID++
 	return &User{
 		Username: username,
-		ID:       lastID,
+		ID:       id.RandomID(),
 	}
 }
 

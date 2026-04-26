@@ -1,7 +1,9 @@
 package event
 
-func (e *Event) RepliesTo(id string) *Event {
-	e.ReplyTo = &id
+import "github.com/Nykenik24/enkrypted/internal/id"
+
+func (e *Event) RepliesTo(id *id.ID) *Event {
+	e.ReplyTo = id
 	return e
 }
 

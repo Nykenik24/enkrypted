@@ -2,16 +2,17 @@ package handlers
 
 import (
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
 
 var LeaveRoomEventKind = buildKind(RoomNamespace, "leave")
 
 type LeaveRoomEvent struct {
-	RoomID uint64 `json:"roomId"`
+	RoomID *id.ID `json:"roomId"`
 }
 
-func NewLeaveRoomEvent(roomId uint64) *LeaveRoomEvent {
+func NewLeaveRoomEvent(roomId *id.ID) *LeaveRoomEvent {
 	return &LeaveRoomEvent{RoomID: roomId}
 }
 

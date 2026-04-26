@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+
+	"github.com/Nykenik24/enkrypted/internal/id"
 )
 
 type eventJSON struct {
 	Kind string         `json:"kind"`
-	ID   string         `json:"id"`
+	ID   *id.ID         `json:"id"`
 	Data map[string]any `json:"data"`
 	Auth *AuthInfo      `json:"auth,omitempty"`
 }

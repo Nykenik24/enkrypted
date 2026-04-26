@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
 
@@ -11,10 +12,10 @@ var ConnectEventKind = buildKind(WebsocketNamespace, "connect")
 
 type ConnectEvent struct {
 	Timestamp string `json:"timestamp"`
-	ID        uint64 `json:"userId"`
+	ID        *id.ID `json:"userId"`
 }
 
-func NewConnectEvent(id uint64) *ConnectEvent {
+func NewConnectEvent(id *id.ID) *ConnectEvent {
 	return &ConnectEvent{
 		Timestamp: time.Now().Format(time.RFC3339),
 		ID:        id,

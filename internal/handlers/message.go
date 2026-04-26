@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/user"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
@@ -14,17 +15,16 @@ type MessageEvent struct {
 	Contents  string     `json:"contents"`
 	Timestamp string     `json:"timestamp"`
 	User      *user.User `json:"user"`
-	ID        uint64     `json:"id"`
-	RoomID    uint64     `json:"roomId"`
+	ID        *id.ID     `json:"id"`
+	RoomID    *id.ID     `json:"roomId"`
 }
 
 func NewMessageEvent(contents, timestamp string, user *user.User) *MessageEvent {
-	lastMessageID++
 	return &MessageEvent{
 		Contents:  contents,
 		Timestamp: timestamp,
 		User:      user,
-		ID:        lastMessageID,
+		ID:        id.RandomID(),
 	}
 }
 

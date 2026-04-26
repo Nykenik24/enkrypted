@@ -1,20 +1,14 @@
 package event
 
 import (
-	"math/rand"
-	"strconv"
+	"github.com/Nykenik24/enkrypted/internal/id"
 )
 
 type Event struct {
 	Kind     *EventKind `json:"kind"`
-	ID       string     `json:"id"`
-	ReplyTo  *string    `json:"replyTo,omitempty"`
+	ID       *id.ID     `json:"id"`
+	ReplyTo  *id.ID     `json:"replyTo,omitempty"`
 	Data     *EventData `json:"data"`
 	Target   *Target    `json:"target,omitempty"`
 	AuthInfo *AuthInfo  `json:"auth,omitempty"`
-}
-
-func GenerateID() string {
-	idn := rand.Uint64()
-	return strconv.FormatUint(idn, 10)
 }

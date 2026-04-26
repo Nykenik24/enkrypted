@@ -4,9 +4,8 @@ import (
 	"fmt"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/id"
 )
-
-var lastMessageID uint64 = 0
 
 const definee = "enkr"
 
@@ -36,6 +35,6 @@ func Base(ev BuiltinEvent) *event.Event {
 	return &event.Event{
 		Kind: ev.Kind(),
 		Data: ev.Data(),
-		ID:   event.GenerateID(),
+		ID:   id.RandomID(),
 	}
 }

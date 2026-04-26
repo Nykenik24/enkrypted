@@ -2,14 +2,16 @@ package ws
 
 import (
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/services/auth"
 )
 
 type Server interface {
-	GetRoom(id uint64) (Room, error)
+	GetRoom(id *id.ID) (Room, error)
+	GetAllRooms() map[*id.ID]Room
 	GetAuth() *auth.AuthService
 	AddRoom() (Room, error)
-	RemoveRoom(id uint64) error
+	RemoveRoom(id *id.ID) error
 }
 
 type Room interface {

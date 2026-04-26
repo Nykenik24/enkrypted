@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 
+	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/services/auth"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
@@ -19,7 +20,7 @@ func Config(adminPasswordHash string) *ServerConfig {
 
 type Server struct {
 	Hub   *ws.Hub
-	Rooms map[uint64]*Room
+	Rooms map[*id.ID]*Room
 	auth  *auth.AuthService
 }
 
@@ -30,7 +31,7 @@ func NewServer(config *ServerConfig) *Server {
 	}
 
 	s := &Server{
-		Rooms: make(map[uint64]*Room),
+		Rooms: make(map[*id.ID]*Room),
 		auth:  authService,
 	}
 

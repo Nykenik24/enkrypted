@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/Nykenik24/enkrypted/internal/event"
+	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/middleware"
 	"github.com/Nykenik24/enkrypted/internal/user"
 )
@@ -79,6 +80,6 @@ func (c *Client) GetUser() *user.User {
 }
 
 // This function gets the ID from the user, meaning it is the equivalent of "client.GetUser().ID".
-func (c *Client) GetID() uint64 {
+func (c *Client) GetID() *id.ID {
 	return c.user.ID
 }

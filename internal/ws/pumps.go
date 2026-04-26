@@ -27,7 +27,7 @@ func (c *Client) ReadPump() {
 			continue
 		}
 
-		log.Printf("event id=%s", ev.ID)
+		log.Printf("event id=%s", ev.ID.String())
 		c.hub.Emit(c, ev)
 	}
 }
