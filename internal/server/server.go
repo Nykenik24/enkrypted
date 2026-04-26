@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/Nykenik24/enkrypted/internal/id"
 	"github.com/Nykenik24/enkrypted/internal/services/auth"
@@ -20,7 +21,7 @@ func Config(adminPasswordHash string) *ServerConfig {
 
 type Server struct {
 	Hub   *ws.Hub
-	Rooms map[*id.ID]*Room
+	Rooms map[string]*Room
 	auth  *auth.AuthService
 }
 
@@ -31,7 +32,7 @@ func NewServer(config *ServerConfig) *Server {
 	}
 
 	s := &Server{
-		Rooms: make(map[*id.ID]*Room),
+		Rooms: make(map[string]*Room),
 		auth:  authService,
 	}
 
@@ -47,16 +48,18 @@ func (s *Server) GetAllRooms() map[*id.ID]ws.Room {
 	rooms := make(map[*id.ID]ws.Room)
 
 	for k, v := range s.Rooms {
-		rooms[k] = v
+		rooms[id.FromString(k)] = v
 	}
 
 	return rooms
 }
 
 func (s *Server) GetRoom(id *id.ID) (ws.Room, error) {
-	room, ok := s.Rooms[id]
+	log.Printf("\nrooms: %v\nroomId: %s", s.Rooms, id.String())
+
+	room, ok := s.Rooms[id.String()]
 	if !ok {
-		return nil, fmt.Errorf("room %d not found", id)
+		return nil, fmt.Errorf("room %s not found", id)
 	}
 
 	return room, nil
