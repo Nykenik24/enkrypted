@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"log"
+	"log/slog"
 
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
@@ -17,11 +17,11 @@ func registerWebSocketRoutes(app *fiber.App) {
 	})
 
 	app.Get("/ws/:id", websocket.New(func(c *websocket.Conn) {
-		// c.Locals is added to the *websocket.Conn
-		log.Println(c.Locals("allowed"))
-		log.Println(c.Params("id"))
-		log.Println(c.Query("v"))
-		log.Println(c.Cookies("session"))
+		slog.Info("new ws connection")
+		slog.Info("allowed", "value", c.Locals("allowed"))
+		slog.Info("id", "value", c.Params("id"))
+		slog.Info("query", "value", c.Query("v"))
+		slog.Info("session", "value", c.Cookies("session"))
 
 		var (
 			mt  int
@@ -30,13 +30,13 @@ func registerWebSocketRoutes(app *fiber.App) {
 		)
 		for {
 			if mt, msg, err = c.ReadMessage(); err != nil {
-				log.Println("read:", err)
+				slog.Error("error reading message from client", "error", err)
 				break
 			}
-			log.Printf("recv:\n%s", msg)
+			slog.Info("got message from ws client", "recv", msg)
 
 			if err = c.WriteMessage(mt, msg); err != nil {
-				log.Println("write:", err)
+				slog.Error("error writing message to client", "error", err)
 				break
 			}
 		}

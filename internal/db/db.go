@@ -1,7 +1,7 @@
 package db
 
 import (
-	"log"
+	"log/slog"
 	"sync"
 
 	"github.com/Nykenik24/enkrypted/internal/models"
@@ -34,7 +34,7 @@ func GetInstance() *DB {
 func NewDB() *gorm.DB {
 	db, err := gorm.Open(sqlite.Open("enkrypted.db"), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("error opening db connection: %s", err.Error())
+		slog.Error("error opening database connection", "error", err)
 	}
 
 	// ctx := context.Background()

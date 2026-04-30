@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"log"
 	"log/slog"
 
 	"github.com/Nykenik24/enkrypted/internal/crypto"
@@ -30,7 +29,8 @@ func (r *roomRepository) GetAll() ([]models.Room, error) {
 	result := r.db.Find(&rooms)
 
 	if err := result.Error; err != nil {
-		log.Printf("error retrieving rooms: %s", err.Error())
+		slog.Error("error retrieving rooms", "error", err)
+		return nil, err
 	}
 
 	slog.Info("retrieved all rows from rooms table", "count", result.RowsAffected)
@@ -43,7 +43,7 @@ func (r *roomRepository) GetByID(id string) (*models.Room, error) {
 
 	room, err := gorm.G[models.Room](r.db).Where("id = ?", id).First(ctx)
 	if err != nil {
-		log.Printf("error getting room with id: %s, error: %s", id, err.Error())
+		slog.Error("error getting room by id", "id", id, "error", err)
 		return nil, err
 	}
 
@@ -57,14 +57,14 @@ func (r *roomRepository) Create(room models.Room) (*models.Room, error) {
 
 	hashedPassword, err := crypto.HashPasswordSecure(room.Password)
 	if err != nil {
-		log.Printf("error hashing room password: %s", err.Error())
+		slog.Error("error hashing room password", "error", err)
 		return nil, err
 	}
 	room.Password = hashedPassword
 
 	err = gorm.G[models.Room](r.db).Create(ctx, &room)
 	if err != nil {
-		log.Printf("error inserting room into database: %s", err.Error())
+		slog.Error("error inserting room into database", "room", room, "error", err)
 		return nil, err
 	}
 
