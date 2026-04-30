@@ -14,6 +14,7 @@ type RoomRepository interface {
 	GetAll() ([]models.Room, error)
 	GetByID(id string) (*models.Room, error)
 	Create(room models.Room) (*models.Room, error)
+	Delete(id string) (int, error)
 }
 
 type roomRepository struct {
@@ -71,4 +72,18 @@ func (r *roomRepository) Create(room models.Room) (*models.Room, error) {
 	slog.Info("created new room", "room", room)
 
 	return &room, nil
+}
+
+func (r *roomRepository) Delete(id string) (int, error) {
+	ctx := context.Background()
+
+	rowsAffected, err := gorm.G[models.Room](r.db).Where("id = ?", id).Delete(ctx)
+	if err != nil {
+		slog.Error("error deleting room from database", "id", id, "error", err)
+		return -1, err
+	}
+
+	slog.Info("deleted room from database", "id", id)
+
+	return rowsAffected, nil
 }

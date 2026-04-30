@@ -17,4 +17,5 @@ func registerRoomRoutes(apiGroup fiber.Router) {
 	roomGroup.Get("", roomHandler.GetAll)
 	roomGroup.Get(":id", roomHandler.GetByID)
 	roomGroup.Post("", roomHandler.Create)
+	roomGroup.Delete(":id", roomHandler.Delete)
 }

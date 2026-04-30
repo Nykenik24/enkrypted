@@ -10,6 +10,7 @@ type RoomHandler interface {
 	GetAll(c fiber.Ctx) error
 	GetByID(c fiber.Ctx) error
 	Create(c fiber.Ctx) error
+	Delete(c fiber.Ctx) error
 }
 
 type roomHandler struct {
@@ -56,6 +57,19 @@ func (h *roomHandler) Create(c fiber.Ctx) error {
 	}
 
 	c.JSON(room)
+
+	return nil
+}
+
+func (h *roomHandler) Delete(c fiber.Ctx) error {
+	id := c.Params("id")
+
+	rowsAffected, err := h.service.Delete(id)
+	if err != nil {
+		return err
+	}
+
+	c.JSON(fiber.Map{"status": "ok", "rowsAffected": rowsAffected})
 
 	return nil
 }

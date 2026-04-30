@@ -9,6 +9,7 @@ type RoomService interface {
 	GetAll() ([]models.Room, error)
 	GetByID(id string) (*models.Room, error)
 	Create(room models.Room) (*models.Room, error)
+	Delete(id string) (int, error)
 }
 
 type roomService struct {
@@ -29,4 +30,8 @@ func (s *roomService) GetByID(id string) (*models.Room, error) {
 
 func (s *roomService) Create(room models.Room) (*models.Room, error) {
 	return s.repository.Create(room)
+}
+
+func (s *roomService) Delete(id string) (int, error) {
+	return s.repository.Delete(id)
 }
