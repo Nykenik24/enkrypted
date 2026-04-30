@@ -1,56 +1,24 @@
 package app
 
 import (
-	"flag"
 	"log"
-	"net/http"
-	"time"
 
-	builtin_ev "github.com/Nykenik24/enkrypted/internal/builtin/events"
-	"github.com/Nykenik24/enkrypted/internal/handlers"
-	"github.com/Nykenik24/enkrypted/internal/ws"
+	"github.com/Nykenik24/enkrypted/internal/db"
+	"github.com/Nykenik24/enkrypted/internal/routes"
+	"github.com/gofiber/fiber/v3"
 )
 
-var addr = flag.String("addr", ":8080", "http service address")
-
-func serveHome(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-	http.ServeFile(w, r, "web/index.html")
-}
-
 func Start() {
-	flag.Parse()
+	app := fiber.New()
 
-	hub := ws.NewHub()
-	go hub.Run()
-
-	http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir("web"))))
-	http.HandleFunc("/", serveHome)
-
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("WS: %s", r.RemoteAddr)
-
-		c := ws.ServeWebsockets(hub, w, r)
-
-		if c == nil {
-			log.Println("ws upgrade failed")
-			return
-		}
-
-		c.AddHandler(builtin_ev.MessageEventKind, &handlers.MessageHandler{})
-		c.AddHandler(builtin_ev.IdentifyEventKind, &handlers.IdentifyHandler{})
-	})
-
-	httpServer := &http.Server{
-		Addr:         *addr,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  60 * time.Second,
+	db := db.GetInstance().Database
+	database, err := db.DB()
+	if err != nil {
+		log.Fatalf("could not get db instance: %s", err.Error())
 	}
+	defer database.Close()
 
-	log.Printf("server listening on %s", *addr)
-	log.Fatal(httpServer.ListenAndServe())
+	routes.RegisterAll(app)
+
+	log.Fatal(app.Listen(":8080"))
 }
