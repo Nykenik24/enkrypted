@@ -1,38 +1,32 @@
 package services
 
 import (
-	"context"
-	"log"
-
-	"github.com/Nykenik24/enkrypted/internal/db"
 	"github.com/Nykenik24/enkrypted/internal/models"
-	"gorm.io/gorm"
+	"github.com/Nykenik24/enkrypted/internal/repository"
 )
 
-func GetAllRooms() ([]models.Room, error) {
-	db := db.GetInstance().Database
-
-	var rooms []models.Room
-	result := db.Find(&rooms)
-
-	if err := result.Error; err != nil {
-		log.Printf("error retrieving rooms: %s", err.Error())
-	}
-
-	log.Printf("retrieved %d rows from rooms table", result.RowsAffected)
-
-	return rooms, nil
+type RoomService interface {
+	GetAll() ([]models.Room, error)
+	GetByID(id string) (*models.Room, error)
+	Create(room models.Room) (*models.Room, error)
 }
 
-func CreateRoom(room models.Room) error {
-	db := db.GetInstance().Database
-	ctx := context.Background()
+type roomService struct {
+	repository repository.RoomRepository
+}
 
-	err := gorm.G[models.Room](db).Create(ctx, &room)
-	if err != nil {
-		log.Printf("error inserting room into database: %s", err.Error())
-		return err
-	}
+func NewRoomService(roomRepository repository.RoomRepository) RoomService {
+	return &roomService{repository: roomRepository}
+}
 
-	return nil
+func (s *roomService) GetAll() ([]models.Room, error) {
+	return s.repository.GetAll()
+}
+
+func (s *roomService) GetByID(id string) (*models.Room, error) {
+	return s.repository.GetByID(id)
+}
+
+func (s *roomService) Create(room models.Room) (*models.Room, error) {
+	return s.repository.Create(room)
 }

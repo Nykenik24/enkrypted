@@ -6,10 +6,23 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func GetAllRooms(c fiber.Ctx) error {
-	rooms, err := services.GetAllRooms()
+type RoomHandler interface {
+	GetAll(c fiber.Ctx) error
+	GetByID(c fiber.Ctx) error
+	Create(c fiber.Ctx) error
+}
+
+type roomHandler struct {
+	service services.RoomService
+}
+
+func NewRoomHandler(roomService services.RoomService) RoomHandler {
+	return &roomHandler{service: roomService}
+}
+
+func (h *roomHandler) GetAll(c fiber.Ctx) error {
+	rooms, err := h.service.GetAll()
 	if err != nil {
-		c.Status(500)
 		return err
 	}
 
@@ -18,19 +31,31 @@ func GetAllRooms(c fiber.Ctx) error {
 	return nil
 }
 
-func CreateRoom(c fiber.Ctx) error {
-	room := new(models.Room)
+func (h *roomHandler) GetByID(c fiber.Ctx) error {
+	id := c.Params("id")
 
-	if err := c.Bind().Body(room); err != nil {
-		return err
-	}
-
-	err := services.CreateRoom(*room)
+	room, err := h.service.GetByID(id)
 	if err != nil {
 		return err
 	}
 
-	c.SendString("ok")
+	c.JSON(room)
+
+	return nil
+}
+
+func (h *roomHandler) Create(c fiber.Ctx) error {
+	room := new(models.Room)
+	if err := c.Bind().Body(room); err != nil {
+		return err
+	}
+
+	room, err := h.service.Create(*room)
+	if err != nil {
+		return err
+	}
+
+	c.JSON(room)
 
 	return nil
 }
