@@ -9,24 +9,24 @@ import (
 	"gorm.io/gorm"
 )
 
-var lock = &sync.Mutex{}
+var (
+	dbSingleton *DB
+	once        sync.Once
+)
 
 type DB struct {
 	Database *gorm.DB
 }
 
-var dbSingleton *DB
-
-func CreateInstance() {
-	lock.Lock()
-	defer lock.Unlock()
-
-	dbSingleton = &DB{Database: NewDB()}
+func createInstance() {
+	once.Do(func() {
+		dbSingleton = &DB{Database: NewDB()}
+	})
 }
 
 func GetInstance() *DB {
 	if dbSingleton == nil {
-		CreateInstance()
+		createInstance()
 	}
 	return dbSingleton
 }
