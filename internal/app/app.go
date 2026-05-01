@@ -2,13 +2,16 @@ package enkrypt
 
 import (
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"strings"
 
 	"github.com/Nykenik24/enkrypted/internal/config"
 	"github.com/Nykenik24/enkrypted/internal/db"
+	"github.com/Nykenik24/enkrypted/internal/repl"
 	"github.com/Nykenik24/enkrypted/internal/routes"
+	"github.com/Nykenik24/enkrypted/internal/util"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -58,18 +61,23 @@ func initLogger() {
 
 type App struct {
 	fiber *fiber.App
+	repl  *repl.REPL
 }
 
 func NewInstance() *App {
 	return &App{
 		fiber: fiber.New(),
+		repl:  repl.NewREPL(""),
 	}
 }
 
 func (a *App) Start() {
+	config.InitConfig()
+	a.repl.Prompt = config.REPL_PROMPT
 	initLogger()
 
 	a.fiber.Hooks().OnPreStartupMessage(config.OnPreStartupMessageHook)
+	a.fiber.Hooks().OnPostStartupMessage(config.OnPostStartupMessageHook)
 
 	db := db.GetInstance().Database
 	database, err := db.DB()
@@ -81,8 +89,33 @@ func (a *App) Start() {
 
 	routes.RegisterAll(a.fiber)
 
-	err = a.fiber.Listen(addr)
-	if err != nil {
-		slog.Error("error binding server to address", "address", addr, "error", err)
+	a.repl.AddCommand(repl.NewCommand(
+		"quit",
+		"quit the program",
+		func(args []string) error {
+			msgs := []string{
+				"See you later!",
+				"Goodbye!",
+				"Bye bye!",
+				"Hope you come back!",
+			}
+			msg := util.Choice(msgs)
+			fmt.Println()
+			fmt.Printf("\"%s\"\x1b[90;3m\nAtt: Enkrypted\x1b[0m\n", msg)
+			os.Exit(0)
+			return nil
+		},
+	))
+
+	go func() {
+		if err := a.fiber.Listen(addr); err != nil {
+			slog.Error("error binding server to address", "address", addr, "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	if err := a.repl.Run(); err != nil {
+		fmt.Printf("error: %v", err)
+		os.Exit(1)
 	}
 }
