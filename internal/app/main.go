@@ -1,6 +1,7 @@
 package app
 
 import (
+	"flag"
 	"log/slog"
 	"os"
 	"strings"
@@ -14,6 +15,8 @@ import (
 const addr = ":8080"
 
 var log *slog.Logger
+
+var prettyLog = flag.Bool("pretty", false, "use pretty logging instead of the usual JSON logging")
 
 func initLogger() {
 	levelStr := os.Getenv("LOG_LEVEL")
@@ -36,14 +39,26 @@ func initLogger() {
 	}
 
 	// Configure the global default logger
-	slog.SetDefault(slog.New(
-		slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-			Level: level,
-		}),
-	))
+	if *prettyLog {
+		logger := slog.New(&PrettyHandler{
+			h: slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+				Level: level,
+			}),
+		})
+
+		slog.SetDefault(logger)
+	} else {
+		slog.SetDefault(slog.New(
+			slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
+				Level: level,
+			}),
+		))
+	}
 }
 
 func Start() {
+	flag.Parse()
+
 	initLogger()
 
 	app := fiber.New()
