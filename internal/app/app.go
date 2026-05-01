@@ -11,7 +11,6 @@ import (
 	"github.com/Nykenik24/enkrypted/internal/db"
 	"github.com/Nykenik24/enkrypted/internal/repl"
 	"github.com/Nykenik24/enkrypted/internal/routes"
-	"github.com/Nykenik24/enkrypted/internal/util"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -74,6 +73,8 @@ func NewInstance() *App {
 func (a *App) Start() {
 	config.InitConfig()
 	a.repl.Prompt = config.REPL_PROMPT
+	a.repl.RegisterDefault()
+
 	initLogger()
 
 	a.fiber.Hooks().OnPreStartupMessage(config.OnPreStartupMessageHook)
@@ -88,24 +89,6 @@ func (a *App) Start() {
 	defer database.Close()
 
 	routes.RegisterAll(a.fiber)
-
-	a.repl.AddCommand(repl.NewCommand(
-		"quit",
-		"quit the program",
-		func(args []string) error {
-			msgs := []string{
-				"See you later!",
-				"Goodbye!",
-				"Bye bye!",
-				"Hope you come back!",
-			}
-			msg := util.Choice(msgs)
-			fmt.Println()
-			fmt.Printf("\"%s\"\x1b[90;3m\nAtt: Enkrypted\x1b[0m\n", msg)
-			os.Exit(0)
-			return nil
-		},
-	))
 
 	go func() {
 		if err := a.fiber.Listen(addr); err != nil {
