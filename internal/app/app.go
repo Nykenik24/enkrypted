@@ -56,12 +56,20 @@ func initLogger() {
 	}
 }
 
-func Start() {
+type App struct {
+	fiber *fiber.App
+}
+
+func NewInstance() *App {
+	return &App{
+		fiber: fiber.New(),
+	}
+}
+
+func (a *App) Start() {
 	initLogger()
 
-	app := fiber.New()
-
-	app.Hooks().OnPreStartupMessage(config.OnPreStartupMessageHook)
+	a.fiber.Hooks().OnPreStartupMessage(config.OnPreStartupMessageHook)
 
 	db := db.GetInstance().Database
 	database, err := db.DB()
@@ -71,9 +79,9 @@ func Start() {
 	}
 	defer database.Close()
 
-	routes.RegisterAll(app)
+	routes.RegisterAll(a.fiber)
 
-	err = app.Listen(addr)
+	err = a.fiber.Listen(addr)
 	if err != nil {
 		slog.Error("error binding server to address", "address", addr, "error", err)
 	}
