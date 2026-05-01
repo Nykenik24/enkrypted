@@ -2,26 +2,58 @@ package enkrypt
 
 import (
 	"flag"
-	"log"
-	"net/http"
-	"time"
+	"log/slog"
+	"os"
+	"strings"
 
-	"github.com/Nykenik24/enkrypted/internal/event"
-	"github.com/Nykenik24/enkrypted/internal/handlers"
-	"github.com/Nykenik24/enkrypted/internal/id"
-	"github.com/Nykenik24/enkrypted/internal/server"
-	"github.com/Nykenik24/enkrypted/internal/ws"
+	"github.com/Nykenik24/enkrypted/internal/config"
+	"github.com/Nykenik24/enkrypted/internal/db"
+	"github.com/Nykenik24/enkrypted/internal/routes"
+	"github.com/gofiber/fiber/v3"
 )
 
-var addr = flag.String("addr", ":8080", "http service address")
-var passwd = flag.String("password", "hunter2", "password")
+const addr = ":8080"
 
-func serveHome(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
+var log *slog.Logger
+
+var prettyLog = flag.Bool("pretty", false, "use pretty logging instead of the usual JSON logging")
+
+func initLogger() {
+	levelStr := os.Getenv("LOG_LEVEL")
+	if levelStr == "" {
+		levelStr = "info"
 	}
-	http.ServeFile(w, r, "web/index.html")
+
+	var level slog.Level
+	switch strings.ToLower(levelStr) {
+	case "debug":
+		level = slog.LevelDebug
+	case "info":
+		level = slog.LevelInfo
+	case "warn":
+		level = slog.LevelWarn
+	case "error":
+		level = slog.LevelError
+	default:
+		level = slog.LevelInfo
+	}
+
+	// Configure the global default logger
+	if *prettyLog {
+		logger := slog.New(&PrettyHandler{
+			h: slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+				Level: level,
+			}),
+		})
+
+		slog.SetDefault(logger)
+	} else {
+		slog.SetDefault(slog.New(
+			slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
+				Level: level,
+			}),
+		))
+	}
 }
 
 type App struct {
@@ -29,76 +61,24 @@ type App struct {
 	Server   *server.Server
 }
 
-var default_handlers = map[string]ws.EventHandler{
-	handlers.MessageEventKind.String(): handlers.MessageHandler,
+	initLogger()
 
-	handlers.IdentifyEventKind.String():   handlers.IdentifyHandler,
-	handlers.ConnectEventKind.String():    handlers.ConnectHandler,
-	handlers.GetClientsEventKind.String(): handlers.GetClientsHandler,
+	app := fiber.New()
 
-	handlers.JoinRoomEventKind.String():  handlers.JoinRoomHandler,
-	handlers.LeaveRoomEventKind.String(): handlers.LeaveRoomHandler,
+	app.Hooks().OnPreStartupMessage(config.OnPreStartupMessageHook)
 
-	handlers.CreateRoomEventKind.String(): handlers.CreateRoomHandler,
-	handlers.RemoveRoomEventKind.String(): handlers.RemoveRoomHandler,
-	handlers.GetRoomsEventKind.String():   handlers.GetRoomsHandler,
-}
-
-func NewApp() *App {
-	return &App{
-		Handlers: default_handlers,
+	db := db.GetInstance().Database
+	database, err := db.DB()
+	if err != nil {
+		slog.Error("could not get db instance", "error", err)
+		panic(1)
 	}
-}
+	defer database.Close()
 
-func (app *App) ServeHTTP() {
-	hub := app.Server.Hub
+	routes.RegisterAll(app)
 
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("WS: %s", r.RemoteAddr)
-
-		c := ws.ServeWebsockets(hub, w, r)
-
-		if c == nil {
-			log.Println("ws upgrade failed")
-			return
-		}
-
-		// TODO: make a helper for emitting this connect event (or something similar)
-
-		connectData := &handlers.ConnectEvent{
-			ID: c.GetID(),
-		}
-
-		connect := &event.Event{
-			Kind: handlers.ConnectEventKind,
-			Data: handlers.ToEventData(connectData),
-			ID:   id.RandomID(),
-		}
-
-		hub.Emit(c, connect)
-	})
-
-	httpServer := &http.Server{
-		Addr:         *addr,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  60 * time.Second,
+	err = app.Listen(addr)
+	if err != nil {
+		slog.Error("error binding server to address", "address", addr, "error", err)
 	}
-
-	log.Printf("server listening on %s", *addr)
-	log.Fatal(httpServer.ListenAndServe())
-
-	// http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir("web"))))
-	// http.HandleFunc("/", serveHome)
-}
-
-func (app *App) StartHub() {
-	flag.Parse()
-
-	app.Server = server.NewServer(server.Config(*passwd))
-	hub := app.Server.Hub
-
-	hub.AddHandlers(app.Handlers)
-
-	go hub.Run()
 }
