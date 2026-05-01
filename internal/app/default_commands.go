@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/Nykenik24/enkrypted/internal/config"
-	"github.com/Nykenik24/enkrypted/internal/util"
 )
 
 func getterCommand(name, desc, valueName string, value func(ctx *CmdContext) any) *Command {
@@ -25,14 +24,6 @@ var defaultCommands = []*Command{
 		"quit",
 		"quit the program",
 		func(args []string, ctx *CmdContext) error {
-			msgs := []string{
-				"See you later!",
-				"Goodbye!",
-				"Bye bye!",
-				"Hope you come back!",
-			}
-			msg := util.Choice(msgs)
-			fmt.Printf("\"%s\"\x1b[90;3m\nAtt: Enkrypted\x1b[0m\n", msg)
 			os.Exit(0)
 			return nil
 		},
