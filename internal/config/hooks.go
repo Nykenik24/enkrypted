@@ -40,10 +40,21 @@ $$       |$$ |  $$ |$$ | $$  |$$ |      $$    $$ |$$    $$/   $$  $$/ $$       |
 	return nil
 }
 
+var funFacts = []string{
+	"The banner's colors are randomly chosen.",
+	"Enkrypted's backend is fully written in Go.",
+	"You can use the --pretty flag for friendlier logs.",
+	"We recommend you use a tool such as Hoppscotch or Bruno to test the API!",
+}
+
 func OnPostStartupMessageHook(sm *fiber.PostStartupMessageData) error {
+	funFacts = append(funFacts, fmt.Sprintf("This message is random, and you just got a 1/%d chance!", len(funFacts)+1))
+
 	fmt.Println()
-	fmt.Println("Welcome to \x1b[34;1mthe enkrypted REPL\x1b[0m! You can manage \x1b[35;3myour enkrypted server\x1b[0m with it.")
-	fmt.Println("Write \x1b[32mquit\x1b[0m to \x1b[91mclose the program\x1b[0m")
+	fmt.Println("Welcome to \x1b[34;1mthe enkrypted REPL\x1b[0m! You can manage your\x1b[35;3menkrypted server\x1b[0m with it.")
+	fmt.Printf("\x1b[1mFun fact\x1b[0m: \x1b[90;3m%s\x1b[0m\n", util.Choice(funFacts))
+	fmt.Println()
+	fmt.Println("Write \x1b[32mquit\x1b[0m \x1b[3mor\x1b[0m \x1b[32mq\x1b[0m to \x1b[91mclose the program\x1b[0m")
 	fmt.Println("Write \x1b[32mhelp\x1b[0m to see all commands.")
 
 	fmt.Printf("\n%s", REPL_PROMPT)

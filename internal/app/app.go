@@ -9,12 +9,9 @@ import (
 
 	"github.com/Nykenik24/enkrypted/internal/config"
 	"github.com/Nykenik24/enkrypted/internal/db"
-	"github.com/Nykenik24/enkrypted/internal/repl"
 	"github.com/Nykenik24/enkrypted/internal/routes"
 	"github.com/gofiber/fiber/v3"
 )
-
-const addr = ":8080"
 
 var log *slog.Logger
 
@@ -60,13 +57,13 @@ func initLogger() {
 
 type App struct {
 	fiber *fiber.App
-	repl  *repl.REPL
+	repl  *REPL
 }
 
 func NewInstance() *App {
 	return &App{
 		fiber: fiber.New(),
-		repl:  repl.NewREPL(""),
+		repl:  NewREPL(""),
 	}
 }
 
@@ -91,13 +88,13 @@ func (a *App) Start() {
 	routes.RegisterAll(a.fiber)
 
 	go func() {
-		if err := a.fiber.Listen(addr); err != nil {
-			slog.Error("error binding server to address", "address", addr, "error", err)
+		if err := a.fiber.Listen(config.ADDR); err != nil {
+			slog.Error("error binding server to address", "address", config.ADDR, "error", err)
 			os.Exit(1)
 		}
 	}()
 
-	if err := a.repl.Run(); err != nil {
+	if err := a.repl.Run(a); err != nil {
 		fmt.Printf("error: %v", err)
 		os.Exit(1)
 	}
