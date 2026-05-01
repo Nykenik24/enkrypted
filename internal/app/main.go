@@ -1,4 +1,4 @@
-package app
+package enkrypt
 
 import (
 	"flag"
@@ -56,8 +56,10 @@ func initLogger() {
 	}
 }
 
-func Start() {
-	flag.Parse()
+type App struct {
+	Handlers map[string]ws.EventHandler
+	Server   *server.Server
+}
 
 	initLogger()
 
