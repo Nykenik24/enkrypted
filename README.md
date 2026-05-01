@@ -17,7 +17,7 @@ cd chat-ui
 npm run start # or npm run dev
 ```
 
-<img width="769" height="558" alt="image" src="https://github.com/user-attachments/assets/96512d58-79a8-410a-a4d8-d5c9ba8e1be9" />
+<img width="784" height="561" alt="image" src="https://github.com/user-attachments/assets/f244c821-ce25-48ce-b80b-c8d0ace72af0" />
 
 ## Discover more
 
