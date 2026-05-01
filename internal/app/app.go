@@ -2,12 +2,14 @@ package enkrypt
 
 import (
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"strings"
 
 	"github.com/Nykenik24/enkrypted/internal/config"
 	"github.com/Nykenik24/enkrypted/internal/db"
+	"github.com/Nykenik24/enkrypted/internal/repl"
 	"github.com/Nykenik24/enkrypted/internal/routes"
 	"github.com/gofiber/fiber/v3"
 )
@@ -58,18 +60,25 @@ func initLogger() {
 
 type App struct {
 	fiber *fiber.App
+	repl  *repl.REPL
 }
 
 func NewInstance() *App {
 	return &App{
 		fiber: fiber.New(),
+		repl:  repl.NewREPL(""),
 	}
 }
 
 func (a *App) Start() {
+	config.InitConfig()
+	a.repl.Prompt = config.REPL_PROMPT
+	a.repl.RegisterDefault()
+
 	initLogger()
 
 	a.fiber.Hooks().OnPreStartupMessage(config.OnPreStartupMessageHook)
+	a.fiber.Hooks().OnPostStartupMessage(config.OnPostStartupMessageHook)
 
 	db := db.GetInstance().Database
 	database, err := db.DB()
@@ -81,8 +90,15 @@ func (a *App) Start() {
 
 	routes.RegisterAll(a.fiber)
 
-	err = a.fiber.Listen(addr)
-	if err != nil {
-		slog.Error("error binding server to address", "address", addr, "error", err)
+	go func() {
+		if err := a.fiber.Listen(addr); err != nil {
+			slog.Error("error binding server to address", "address", addr, "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	if err := a.repl.Run(); err != nil {
+		fmt.Printf("error: %v", err)
+		os.Exit(1)
 	}
 }
