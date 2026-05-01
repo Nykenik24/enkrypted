@@ -17,6 +17,8 @@ cd chat-ui
 npm run start # or npm run dev
 ```
 
+<img width="769" height="558" alt="image" src="https://github.com/user-attachments/assets/96512d58-79a8-410a-a4d8-d5c9ba8e1be9" />
+
 ## Discover more
 
 Read [the wiki](https://github.com/Nykenik24/enkrypted/wiki).
