@@ -56,11 +56,7 @@ func initLogger() {
 	}
 }
 
-type App struct {
-	Handlers map[string]ws.EventHandler
-	Server   *server.Server
-}
-
+func Start() {
 	initLogger()
 
 	app := fiber.New()
