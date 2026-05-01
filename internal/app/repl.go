@@ -1,4 +1,4 @@
-package repl
+package enkrypt
 
 import (
 	"bufio"
@@ -11,15 +11,19 @@ import (
 	"syscall"
 )
 
-type Handler func(args []string) error
+type CommandHandler func(args []string, ctx *CmdContext) error
+
+type CmdContext struct {
+	App *App
+}
 
 type Command struct {
 	Name  string
 	Usage string
-	Func  Handler
+	Func  CommandHandler
 }
 
-func NewCommand(name, usage string, fn Handler) *Command {
+func NewCommand(name, usage string, fn CommandHandler) *Command {
 	return &Command{
 		Name:  name,
 		Usage: usage,
@@ -30,6 +34,7 @@ func NewCommand(name, usage string, fn Handler) *Command {
 type REPL struct {
 	Prompt   string
 	Commands map[string]*Command
+	Aliases  map[string]string
 	stdout   *bufio.Writer
 }
 
@@ -37,6 +42,7 @@ func NewREPL(prompt string) *REPL {
 	return &REPL{
 		Prompt:   prompt,
 		Commands: make(map[string]*Command),
+		Aliases:  make(map[string]string),
 		stdout:   bufio.NewWriter(os.Stdout),
 	}
 }
@@ -45,7 +51,11 @@ func (r *REPL) AddCommand(cmd *Command) {
 	r.Commands[cmd.Name] = cmd
 }
 
-func (r *REPL) Handle(args []string) error {
+func (r *REPL) Alias(original, alias string) {
+	r.Aliases[alias] = original
+}
+
+func (r *REPL) Handle(args []string, ctx *CmdContext) error {
 	if len(args) == 0 {
 		return errors.New("no args")
 	}
@@ -55,23 +65,37 @@ func (r *REPL) Handle(args []string) error {
 		return nil
 	}
 
-	command, exists := r.Commands[args[0]]
+	name := args[0]
+	if _, aliased := r.Aliases[name]; aliased {
+		name = r.Aliases[name]
+	}
+
+	command, exists := r.Commands[name]
 	if !exists {
 		return fmt.Errorf("no handler for %s", args[0])
 	}
 
-	return command.Func(args)
+	return command.Func(args, ctx)
 }
 
 func (r *REPL) help() {
-	fmt.Println("\nCommands for enkrypted:")
+	fmt.Println("Commands for enkrypted:")
+
+	// might want to sort these later
 	for _, cmd := range r.Commands {
 		fmt.Printf("\t\x1b[1m%s\x1b[0m - \x1b[3m%s\x1b[0m\n", cmd.Name, cmd.Usage)
 	}
-	fmt.Println()
+
+	if len(r.Aliases) > 0 {
+		fmt.Println()
+		fmt.Println("Aliases for enkrypted:")
+		for alias, og := range r.Aliases {
+			fmt.Printf("\t\x1b[1m%s\x1b[0m - \x1b[3m%s\x1b[0m\n", alias, og)
+		}
+	}
 }
 
-func (r *REPL) Run() error {
+func (r *REPL) Run(app *App) error {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -83,12 +107,11 @@ func (r *REPL) Run() error {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		fmt.Print(r.Prompt)
-
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				return errors.New("\nEOF received, exiting...")
+				fmt.Println("\nReceived EOF, exiting...")
+				return nil
 			}
 			return fmt.Errorf("error reading input: %v", err)
 		}
@@ -98,9 +121,13 @@ func (r *REPL) Run() error {
 			continue
 		}
 
+		fmt.Println()
 		args := strings.Split(input, " ")
-		if err := r.Handle(args); err != nil {
+		if err := r.Handle(args, &CmdContext{App: app}); err != nil {
 			fmt.Printf("\n\x1b[31mError when running command:\x1b[0m \n\x1b[90m---->\x1b[0m %v\n\n", err)
 		}
+		fmt.Println()
+
+		fmt.Print(r.Prompt)
 	}
 }
