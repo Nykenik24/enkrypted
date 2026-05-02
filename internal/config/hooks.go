@@ -43,7 +43,6 @@ $$       |$$ |  $$ |$$ | $$  |$$ |      $$    $$ |$$    $$/   $$  $$/ $$       |
 var funFacts = []string{
 	"The banner's colors are randomly chosen.",
 	"Enkrypted's backend is fully written in Go.",
-	"You can use the --pretty flag for friendlier logs.",
 	"We recommend you use a tool such as Hoppscotch or Bruno to test the API!",
 }
 
