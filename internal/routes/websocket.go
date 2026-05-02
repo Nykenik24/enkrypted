@@ -3,9 +3,21 @@ package routes
 import (
 	"log/slog"
 
+	"github.com/Nykenik24/enkrypted/internal/id"
+	"github.com/Nykenik24/enkrypted/internal/repository"
+	"github.com/Nykenik24/enkrypted/internal/ws"
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
 )
+
+func emitError(err error) *ws.Event {
+	ev := ws.NewEvent(ws.ErrorEvent)
+	ev.ID = id.RandomID()
+	*ev.Error = err.Error()
+	return ev
+}
+
+var repo = repository.GlobalClientRepo()
 
 func registerWebSocketRoutes(app *fiber.App) {
 	app.Use("/ws", func(c fiber.Ctx) error {
@@ -23,21 +35,50 @@ func registerWebSocketRoutes(app *fiber.App) {
 		slog.Info("query", "value", c.Query("v"))
 		slog.Info("session", "value", c.Cookies("session"))
 
+		ct := ws.NewClient(c)
+		ws.RegisterDefaultEvents(ct)
+
+		repo.Add(ct)
+
+		defer (func() {
+			ct.Disconnect()
+		})()
+
 		var (
-			mt  int
-			msg []byte
-			err error
+			mt  int       // message type
+			ev  *ws.Event // message
+			err error     // error
 		)
 		for {
-			if mt, msg, err = c.ReadMessage(); err != nil {
+			if mt, ev, err = ct.ReadEvent(); err != nil {
 				slog.Error("error reading message from client", "error", err)
+				ct.Reply(mt, emitError(err))
+				continue
+			}
+			slog.Info("got message from ws client", "recv", "\n"+ev.String())
+
+			if ev.ID == nil {
+				ev.ID = id.RandomID()
+			}
+
+			reply, err := ct.Handle(ev)
+			if err != nil {
+				slog.Error("error handling event", "error", err)
+				ct.Reply(mt, emitError(err))
+				continue
+			}
+			slog.Info("replying to client", "reply", "\n"+reply.String())
+
+			if ev.Kind == ws.DisconnectEvent {
+				repo.Remove(ct.ID)
+				slog.Info("Client disconnected", "client", string(ct.ID.Short()))
 				break
 			}
-			slog.Info("got message from ws client", "recv", msg)
 
-			if err = c.WriteMessage(mt, msg); err != nil {
+			if err := ct.Reply(mt, reply); err != nil {
 				slog.Error("error writing message to client", "error", err)
-				break
+				ct.Reply(mt, emitError(err))
+				continue
 			}
 		}
 
