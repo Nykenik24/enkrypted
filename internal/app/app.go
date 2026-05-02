@@ -74,7 +74,7 @@ func (a *App) Start() {
 	routes.RegisterAll(a.fiber)
 
 	go func() {
-		if err := a.fiber.Listen(config.ADDR); err != nil {
+		if err := a.fiber.Listen(*config.ADDR); err != nil {
 			slog.Error("error binding server to address", "address", config.ADDR, "error", err)
 			os.Exit(1)
 		}

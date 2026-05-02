@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/big"
 )
 
@@ -35,6 +36,10 @@ func RandomID() *ID {
 	return i
 }
 
+func (i *ID) Bytes() []byte {
+	return ([]byte)(*i)
+}
+
 func (i *ID) String() string {
 	if i == nil {
 		return ""
@@ -58,4 +63,12 @@ func (i *ID) UnmarshalJSON(data []byte) error {
 
 	*i = ID(s)
 	return nil
+}
+
+func (i *ID) Short() []byte {
+	return fmt.Appendf(i.Bytes()[:6], "...")
+}
+
+func (a *ID) Compare(b *ID) bool {
+	return a.String() == b.String()
 }
