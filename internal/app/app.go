@@ -1,7 +1,6 @@
 package enkrypt
 
 import (
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -12,10 +11,6 @@ import (
 	"github.com/Nykenik24/enkrypted/internal/routes"
 	"github.com/gofiber/fiber/v3"
 )
-
-var log *slog.Logger
-
-var prettyLog = flag.Bool("pretty", false, "use pretty logging instead of the usual JSON logging")
 
 func initLogger() {
 	levelStr := os.Getenv("LOG_LEVEL")
@@ -37,22 +32,13 @@ func initLogger() {
 		level = slog.LevelInfo
 	}
 
-	// Configure the global default logger
-	if *prettyLog {
-		logger := slog.New(&PrettyHandler{
-			h: slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-				Level: level,
-			}),
-		})
+	logger := slog.New(&PrettyHandler{
+		h: slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+			Level: level,
+		}),
+	})
 
-		slog.SetDefault(logger)
-	} else {
-		slog.SetDefault(slog.New(
-			slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
-				Level: level,
-			}),
-		))
-	}
+	slog.SetDefault(logger)
 }
 
 type App struct {

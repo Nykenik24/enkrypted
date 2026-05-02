@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+
+	"github.com/Nykenik24/enkrypted/internal/config"
 )
 
 type PrettyHandler struct {
@@ -25,11 +27,13 @@ func (p *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
 		return true
 	})
 
+	fmt.Print("\033[2K\r")
 	fmt.Printf("[%s] %-5s %s", time, level, r.Message)
 	if len(attrs) > 0 {
 		fmt.Printf(" | %s", strings.Join(attrs, " "))
 	}
 	fmt.Println()
+	fmt.Print(config.REPL_PROMPT)
 
 	return nil
 }
