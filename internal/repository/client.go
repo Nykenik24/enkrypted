@@ -7,7 +7,13 @@ import (
 	"github.com/Nykenik24/enkrypted/internal/ws"
 )
 
-type ClientRepository = Repository[ws.Client]
+type ClientRepository interface {
+	GetAll() ([]ws.Client, error)
+	GetByID(id string) (*ws.Client, error)
+	Create(client ws.Client) (*ws.Client, error)
+	Delete(id string) (int, error)
+	Count() (int, error)
+}
 
 type clientRepository struct {
 	clients []ws.Client
@@ -63,7 +69,7 @@ func (r *clientRepository) Clear() error {
 
 var clientRepo ClientRepository
 
-func GlobalClientRepo() Repository[ws.Client] {
+func GlobalClientRepo() ClientRepository {
 	if clientRepo == nil {
 		clientRepo = NewClientRepo()
 	}

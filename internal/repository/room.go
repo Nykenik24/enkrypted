@@ -10,7 +10,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type RoomRepository = Repository[models.Room]
+type RoomRepository interface {
+	GetAll() ([]models.Room, error)
+	GetByID(id string) (*models.Room, error)
+	Create(client models.Room) (*models.Room, error)
+	Delete(id string) (int, error)
+	Count() (int, error)
+}
 
 type roomRepository struct {
 	db *gorm.DB
