@@ -6,24 +6,60 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"regexp"
+
+	"time"
+
+	"gorm.io/gorm"
 )
 
-type ID []byte
+type IDModel struct {
+	ID        string `gorm:"primaryKey;size:32"` // if id_len changes, update size parameter
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+func (i *IDModel) BeforeCreate(tx *gorm.DB) (err error) {
+	if i.ID == "" {
+		i.ID = string(generate())
+	} else {
+		if !validate(i.ID) {
+			return fmt.Errorf("invalid ID")
+		}
+	}
+
+	return nil
+}
+
+type ID struct {
+	IDModel
+}
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 const id_len = 32
 
+var idRegex = regexp.MustCompile(fmt.Sprintf(`[a-zA-Z0-9]{%d}`, id_len))
+
+func validate(id string) bool {
+	return len(id) == id_len && idRegex.Match([]byte(id))
+}
+
+func newID(contents string) *ID {
+	return &ID{IDModel: IDModel{ID: contents}}
+}
+
 func fromBytes(str []byte) *ID {
-	id := make(ID, id_len)
+	id := make([]byte, id_len)
 	copy(id, str)
-	return &id
+	return newID(string(id))
 }
 
 func FromString(str string) *ID {
 	return fromBytes([]byte(str))
 }
 
-func RandomID() *ID {
+func generate() []byte {
 	result := make([]byte, id_len)
 	max := big.NewInt(int64(len(charset)))
 
@@ -32,19 +68,24 @@ func RandomID() *ID {
 		result[i] = charset[num.Int64()]
 	}
 
+	return result
+}
+
+func RandomID() *ID {
+	result := generate()
 	i := fromBytes(result)
 	return i
 }
 
 func (i *ID) Bytes() []byte {
-	return ([]byte)(*i)
+	return []byte(i.ID)
 }
 
 func (i *ID) String() string {
 	if i == nil {
 		return ""
 	}
-	return string(*i)
+	return i.ID
 }
 
 func (i ID) MarshalJSON() ([]byte, error) {
@@ -61,7 +102,7 @@ func (i *ID) UnmarshalJSON(data []byte) error {
 		return errors.New("id: cannot unmarshal into nil pointer")
 	}
 
-	*i = ID(s)
+	i.ID = s
 	return nil
 }
 

@@ -13,7 +13,8 @@ import (
 func emitError(err error) *ws.Event {
 	ev := ws.NewEvent(ws.ErrorEvent)
 	ev.ID = id.RandomID()
-	*ev.Error = err.Error()
+	errstr := err.Error()
+	ev.Error = &errstr
 	return ev
 }
 
