@@ -1,6 +1,8 @@
 package models
 
+import "github.com/Nykenik24/enkrypted/internal/id"
+
 type Room struct {
-	StringIDModel
+	id.IDModel
 	Password string `json:"-"`
 }
