@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Nykenik24/enkrypted/internal/id"
+	"github.com/Nykenik24/enkrypted/internal/models"
 )
 
 type EventHandler func(ev *Event) (response *Event)
 
 type Event struct {
-	Kind string `json:"kind"`
-	ID   *id.ID `json:"id"`
+	Kind string     `json:"kind"`
+	ID   *models.ID `json:"id"`
 
 	Error *string `json:"error,omitempty"`
 }
@@ -19,7 +19,7 @@ type Event struct {
 func NewEvent(kind string) *Event {
 	return &Event{
 		Kind: kind,
-		ID:   id.RandomID(),
+		ID:   models.RandomID(),
 	}
 }
 
