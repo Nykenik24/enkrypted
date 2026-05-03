@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/Nykenik24/enkrypted/internal/id"
+	"github.com/Nykenik24/enkrypted/internal/models"
 )
 
 type User struct {
-	Username string `json:"username"`
-	ID       *id.ID `json:"id"`
+	Username string     `json:"username"`
+	ID       *models.ID `json:"id"`
 }
 
 func NewUser(username string) *User {
 	return &User{
 		Username: username,
-		ID:       id.RandomID(),
+		ID:       models.RandomID(),
 	}
 }
 

@@ -4,21 +4,21 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Nykenik24/enkrypted/internal/id"
+	"github.com/Nykenik24/enkrypted/internal/models"
 	"github.com/gofiber/contrib/v3/websocket"
 )
 
 type Client struct {
 	conn     *websocket.Conn
 	handlers map[string]EventHandler
-	ID       *id.ID
+	ID       *models.ID
 }
 
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
 		conn:     conn,
 		handlers: make(map[string]EventHandler),
-		ID:       id.RandomID(),
+		ID:       models.RandomID(),
 	}
 }
 

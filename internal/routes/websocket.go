@@ -3,7 +3,7 @@ package routes
 import (
 	"log/slog"
 
-	"github.com/Nykenik24/enkrypted/internal/id"
+	"github.com/Nykenik24/enkrypted/internal/models"
 	"github.com/Nykenik24/enkrypted/internal/repository"
 	"github.com/Nykenik24/enkrypted/internal/ws"
 	"github.com/gofiber/contrib/v3/websocket"
@@ -12,7 +12,7 @@ import (
 
 func emitError(err error) *ws.Event {
 	ev := ws.NewEvent(ws.ErrorEvent)
-	ev.ID = id.RandomID()
+	ev.ID = models.RandomID()
 	errstr := err.Error()
 	ev.Error = &errstr
 	return ev
@@ -59,7 +59,7 @@ func registerWebSocketRoutes(app *fiber.App) {
 			slog.Info("got message from ws client", "recv", "\n"+ev.String())
 
 			if ev.ID == nil {
-				ev.ID = id.RandomID()
+				ev.ID = models.RandomID()
 			}
 
 			reply, err := ct.Handle(ev)
