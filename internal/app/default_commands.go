@@ -68,7 +68,10 @@ var defaultCommands = []*Command{
 		"get all connected clients",
 		func(args []string, ctx *CmdContext) error {
 			repo := repository.GlobalClientRepo()
-			clients := repo.GetAll()
+			clients, err := repo.GetAll()
+			if err != nil {
+				return err
+			}
 
 			short := false
 			if len(args) > 1 && args[1] == "short-id" {
@@ -82,9 +85,13 @@ var defaultCommands = []*Command{
 
 			fmt.Println("\x1b[33mConnected clients\x1b[0m")
 			i := 0
+			count, err := repo.Count()
+			if err != nil {
+				return err
+			}
 			for _, client := range clients {
 				prefix := "├──"
-				if i == repo.Count()-1 {
+				if i == count-1 {
 					prefix = "└──"
 				}
 				id := client.ID.Bytes()
