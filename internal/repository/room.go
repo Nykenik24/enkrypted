@@ -10,12 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type RoomRepository interface {
-	GetAll() ([]models.Room, error)
-	GetByID(id string) (*models.Room, error)
-	Create(room models.Room) (*models.Room, error)
-	Delete(id string) (int, error)
-}
+type RoomRepository = Repository[models.Room]
 
 type roomRepository struct {
 	db *gorm.DB
@@ -86,4 +81,30 @@ func (r *roomRepository) Delete(id string) (int, error) {
 	slog.Info("deleted room from database", "id", id)
 
 	return rowsAffected, nil
+}
+
+func (r *roomRepository) Count() (int, error) {
+	var rooms []models.Room
+	result := r.db.Find(&rooms)
+
+	if err := result.Error; err != nil {
+		slog.Error("error retrieving rooms", "error", err)
+		return -1, err
+	}
+
+	return len(rooms), nil
+}
+
+func (r *roomRepository) Clear() error {
+	ctx := context.Background()
+
+	_, err := gorm.G[models.Room](r.db).Delete(ctx)
+	if err != nil {
+		slog.Error("error clearing rooms from database", "error", err)
+		return err
+	}
+
+	slog.Info("cleared rooms from database")
+
+	return nil
 }

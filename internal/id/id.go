@@ -72,3 +72,7 @@ func (i *ID) Short() []byte {
 func (a *ID) Compare(b *ID) bool {
 	return a.String() == b.String()
 }
+
+func (a *ID) CompareString(b string) bool {
+	return a.String() == b
+}

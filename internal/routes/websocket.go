@@ -38,7 +38,7 @@ func registerWebSocketRoutes(app *fiber.App) {
 		ct := ws.NewClient(c)
 		ws.RegisterDefaultEvents(ct)
 
-		repo.Add(ct)
+		repo.Create(*ct)
 
 		defer (func() {
 			ct.Disconnect()
@@ -70,7 +70,7 @@ func registerWebSocketRoutes(app *fiber.App) {
 			slog.Info("replying to client", "reply", "\n"+reply.String())
 
 			if ev.Kind == ws.DisconnectEvent {
-				repo.Remove(ct.ID)
+				repo.Delete(ct.ID.String())
 				slog.Info("Client disconnected", "client", string(ct.ID.Short()))
 				break
 			}
