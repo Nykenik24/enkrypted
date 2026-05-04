@@ -1,11 +1,15 @@
 package enkrypt
 
 import (
+	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
 	"github.com/Nykenik24/enkrypted/internal/config"
+	"github.com/Nykenik24/enkrypted/internal/db"
+	"github.com/Nykenik24/enkrypted/internal/models"
 	"github.com/Nykenik24/enkrypted/internal/repository"
 )
 
@@ -106,6 +110,38 @@ var defaultCommands = []*Command{
 			return nil
 		},
 	),
+	NewCommand("db", "query database tables", func(args []string, ctx *CmdContext) error {
+		helpMessage := "Usage:\n\thelp: display this message\n\trooms: print rooms table"
+
+		if len(args) < 2 {
+			fmt.Println(helpMessage)
+			return errors.New("not enough arguments passed")
+		}
+
+		db := db.GetInstance().Database
+
+		switch args[1] {
+		case "help":
+			fmt.Println(helpMessage)
+			return nil
+		case "rooms":
+			var rooms []models.Room
+			result := db.Find(&rooms)
+
+			if err := result.Error; err != nil {
+				slog.Error("error retrieving rooms", "error", err)
+				return err
+			}
+
+			for _, v := range rooms {
+				fmt.Printf("\tID: %s\n\tCreatedAt: %s\n\tUpdatedAt: %s\n\tDeletedAt: %v\n\t------\n", v.ID, v.CreatedAt, v.UpdatedAt, v.DeletedAt)
+			}
+			return nil
+		default:
+			fmt.Println(helpMessage)
+			return fmt.Errorf("unkown argument: %s", args[1])
+		}
+	}),
 	getterCommand("addr", "get the server's address", "Addresss", func(_ *CmdContext) any {
 		return *config.ADDR
 	}),
