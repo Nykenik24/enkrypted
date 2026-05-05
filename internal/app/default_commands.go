@@ -68,10 +68,7 @@ var defaultCommands = []*Command{
 		"get all connected clients",
 		func(args []string, ctx *CmdContext) error {
 			repo := repository.GlobalClientRepo()
-			clients, err := repo.GetAll()
-			if err != nil {
-				return err
-			}
+			clients := repo.GetAll()
 
 			short := false
 			if len(args) > 1 && args[1] == "short-id" {

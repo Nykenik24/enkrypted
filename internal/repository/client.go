@@ -8,7 +8,7 @@ import (
 )
 
 type ClientRepository interface {
-	GetAll() ([]ws.Client, error)
+	GetAll() []ws.Client
 	GetByID(id string) (*ws.Client, error)
 	Create(client ws.Client) (*ws.Client, error)
 	Delete(id string) (int, error)
@@ -23,8 +23,8 @@ func NewClientRepo() ClientRepository {
 	return &clientRepository{}
 }
 
-func (r *clientRepository) GetAll() ([]ws.Client, error) {
-	return r.clients, nil
+func (r *clientRepository) GetAll() []ws.Client {
+	return r.clients
 }
 
 func (r *clientRepository) GetByID(id string) (*ws.Client, error) {
@@ -45,12 +45,12 @@ func (r *clientRepository) Create(c ws.Client) (*ws.Client, error) {
 func (r *clientRepository) Delete(id string) (int, error) {
 	for i, c := range r.clients {
 		if c.ID.CompareString(id) {
-			clients, err := util.RemoveByIndex(r.clients, i)
+			newClients, err := util.RemoveByIndex(r.clients, i)
 			if err != nil {
 				return -1, err
 			}
 
-			r.clients = clients
+			r.clients = newClients
 			return i, nil
 		}
 	}
