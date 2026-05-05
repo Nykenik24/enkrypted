@@ -56,7 +56,7 @@ func (r *userRepository) GetByID(id string) (*models.User, error) {
 func (r *userRepository) GetByName(name string) (*models.User, error) {
 	ctx := context.Background()
 
-	user, err := gorm.G[models.User](r.db).Where("name = ?", name).First(ctx)
+	user, err := gorm.G[models.User](r.db).Where("username = ?", name).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting user by name (%s): %v", name, err)
 	}
