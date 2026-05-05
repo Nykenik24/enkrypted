@@ -8,7 +8,7 @@ import (
 )
 
 func registerRoomRoutes(apiGroup fiber.Router) {
-	roomRepository := repository.NewRoomRepository()
+	roomRepository := repository.NewRoomRepo()
 	roomService := services.NewRoomService(roomRepository)
 	roomHandler := handlers.NewRoomHandler(roomService)
 

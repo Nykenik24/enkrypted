@@ -22,7 +22,7 @@ type roomRepository struct {
 	db *gorm.DB
 }
 
-func NewRoomRepository() RoomRepository {
+func NewRoomRepo() RoomRepository {
 	return &roomRepository{db: db.GetInstance().Database}
 }
 
