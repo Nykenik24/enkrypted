@@ -4,6 +4,6 @@ type User struct {
 	IDModel
 	Connected bool `json:"connected"`
 
-	Username   string `json:"username"`
-	HashedPass string `json:"hashed_password"`
+	Username string `json:"username"`
+	Password string `json:"-"`
 }

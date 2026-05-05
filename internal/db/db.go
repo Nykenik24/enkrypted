@@ -40,6 +40,7 @@ func NewDB() *gorm.DB {
 	// ctx := context.Background()
 
 	db.AutoMigrate(&models.Room{})
+	db.AutoMigrate(&models.User{})
 
 	return db
 }

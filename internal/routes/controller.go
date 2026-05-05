@@ -8,4 +8,5 @@ func RegisterAll(app *fiber.App) {
 
 	apiGroup := app.Group("/api/v1")
 	registerRoomRoutes(apiGroup)
+	registerUserRoutes(apiGroup)
 }
