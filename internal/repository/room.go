@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/Nykenik24/enkrypted/internal/crypto"
@@ -31,8 +32,7 @@ func (r *roomRepository) GetAll() ([]models.Room, error) {
 	result := r.db.Find(&rooms)
 
 	if err := result.Error; err != nil {
-		slog.Error("error retrieving rooms", "error", err)
-		return nil, err
+		return nil, fmt.Errorf("error retrieving rooms: %v", err)
 	}
 
 	slog.Info("retrieved all rows from rooms table", "count", result.RowsAffected)
@@ -45,8 +45,7 @@ func (r *roomRepository) GetByID(id string) (*models.Room, error) {
 
 	room, err := gorm.G[models.Room](r.db).Where("id = ?", id).First(ctx)
 	if err != nil {
-		slog.Error("error getting room by id", "id", id, "error", err)
-		return nil, err
+		return nil, fmt.Errorf("error getting room by id (%s): %v", id, err)
 	}
 
 	slog.Info("retrieved row by id from rooms table", "id", id)
@@ -59,15 +58,13 @@ func (r *roomRepository) Create(room models.Room) (*models.Room, error) {
 
 	hashedPassword, err := crypto.HashPasswordSecure(room.Password)
 	if err != nil {
-		slog.Error("error hashing room password", "error", err)
-		return nil, err
+		return nil, fmt.Errorf("error hashing room password: %v", err)
 	}
 	room.Password = hashedPassword
 
 	err = gorm.G[models.Room](r.db).Create(ctx, &room)
 	if err != nil {
-		slog.Error("error inserting room into database", "room", room, "error", err)
-		return nil, err
+		return nil, fmt.Errorf("error inserting room into database: %v", err)
 	}
 
 	slog.Info("created new room", "room", room)
@@ -80,8 +77,7 @@ func (r *roomRepository) Delete(id string) (int, error) {
 
 	rowsAffected, err := gorm.G[models.Room](r.db).Where("id = ?", id).Delete(ctx)
 	if err != nil {
-		slog.Error("error deleting room from database", "id", id, "error", err)
-		return -1, err
+		return -1, fmt.Errorf("error deleting room %s from database: %v", id, err)
 	}
 
 	slog.Info("deleted room from database", "id", id)
@@ -94,8 +90,7 @@ func (r *roomRepository) Count() (int, error) {
 	result := r.db.Find(&rooms)
 
 	if err := result.Error; err != nil {
-		slog.Error("error retrieving rooms", "error", err)
-		return -1, err
+		return -1, fmt.Errorf("error retrieving rooms: %v", err)
 	}
 
 	return len(rooms), nil
@@ -106,8 +101,7 @@ func (r *roomRepository) Clear() error {
 
 	_, err := gorm.G[models.Room](r.db).Delete(ctx)
 	if err != nil {
-		slog.Error("error clearing rooms from database", "error", err)
-		return err
+		return fmt.Errorf("error clearing rooms from database: %v", err)
 	}
 
 	slog.Info("cleared rooms from database")

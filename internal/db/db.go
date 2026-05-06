@@ -35,6 +35,7 @@ func NewDB() *gorm.DB {
 	db, err := gorm.Open(sqlite.Open("enkrypted.db"), &gorm.Config{})
 	if err != nil {
 		slog.Error("error opening database connection", "error", err)
+		return nil
 	}
 
 	// ctx := context.Background()
