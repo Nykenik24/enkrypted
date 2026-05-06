@@ -164,7 +164,7 @@ var defaultCommands = []*Command{
 			return nil
 		},
 	),
-	getterCommand("addr", "get the server's address", "Addresss", func(_ *CmdContext) any {
+	getterCommand("addr", "get the server's address", "Address", func(_ *CmdContext) any {
 		return *config.ADDR
 	}),
 	getterCommand("version", "get the server's version", "Version", func(_ *CmdContext) any {
