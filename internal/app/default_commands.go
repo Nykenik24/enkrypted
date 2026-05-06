@@ -3,10 +3,13 @@ package enkrypt
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/Nykenik24/enkrypted/internal/config"
+	"github.com/Nykenik24/enkrypted/internal/models"
 	"github.com/Nykenik24/enkrypted/internal/repository"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func getterCommand(name, desc, valueName string, value func(ctx *CmdContext) any) *Command {
@@ -99,6 +102,64 @@ var defaultCommands = []*Command{
 				i++
 			}
 			fmt.Println()
+
+			return nil
+		},
+	),
+	NewCommand(
+		"new-room",
+		"create a new room",
+		func(args []string, ctx *CmdContext) error {
+			fmt.Println("\x1b[32mCreate a new room\n----------\x1b[0m")
+
+			stars := func(in string) string {
+				str := ""
+				for range in {
+					str = str + "*"
+				}
+				return str
+			}
+			var (
+				pass []byte
+				err  error
+			)
+			for {
+				fmt.Print("\x1b[34mPassword\x1b[0m: ")
+				pass, err = terminal.ReadPassword(0)
+				if err != nil {
+					return err
+				}
+
+				fmt.Println(stars(string(pass)))
+
+				if len(pass) < 8 {
+					fmt.Println("\x1b[31mPassword must be at least 8 characters long\x1b[0m")
+					continue
+				}
+
+				break
+			}
+
+			fmt.Print("\x1b[34mConfirm password\x1b[0m: ")
+			confirm, err := terminal.ReadPassword(0)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(stars(string(confirm)))
+
+			if slices.Compare(confirm, pass) != 0 {
+				fmt.Print("\n\x1b[31mPassword doesn't match first entry\x1b[0m")
+				return nil
+			}
+
+			fmt.Println()
+			fmt.Println("Creating new room...")
+
+			repo := repository.NewRoomRepo()
+			repo.Create(models.Room{
+				Password: string(confirm),
+			})
 
 			return nil
 		},
