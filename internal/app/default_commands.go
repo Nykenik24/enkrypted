@@ -9,7 +9,7 @@ import (
 	"github.com/Nykenik24/enkrypted/internal/config"
 	"github.com/Nykenik24/enkrypted/internal/models"
 	"github.com/Nykenik24/enkrypted/internal/repository"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 func getterCommand(name, desc, valueName string, value func(ctx *CmdContext) any) *Command {
@@ -125,7 +125,7 @@ var defaultCommands = []*Command{
 			)
 			for {
 				fmt.Print("\x1b[34mPassword\x1b[0m: ")
-				pass, err = terminal.ReadPassword(0)
+				pass, err = term.ReadPassword(0)
 				if err != nil {
 					return err
 				}
@@ -141,7 +141,7 @@ var defaultCommands = []*Command{
 			}
 
 			fmt.Print("\x1b[34mConfirm password\x1b[0m: ")
-			confirm, err := terminal.ReadPassword(0)
+			confirm, err := term.ReadPassword(0)
 			if err != nil {
 				return err
 			}
