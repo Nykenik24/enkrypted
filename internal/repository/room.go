@@ -13,7 +13,7 @@ import (
 type RoomRepository interface {
 	GetAll() ([]models.Room, error)
 	GetByID(id string) (*models.Room, error)
-	Create(client models.Room) (*models.Room, error)
+	Create(room models.Room) (*models.Room, error)
 	Delete(id string) (int, error)
 	Count() (int, error)
 }
